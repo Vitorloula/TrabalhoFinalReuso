@@ -2,6 +2,9 @@ package com.sebastian.inventory_management.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -45,6 +48,13 @@ public class ProductController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @GetMapping("/paginated")
+    public ResponseEntity<Page<ProductResponseDTO>> getAllProducts(@PageableDefault(size = 10) Pageable pageable) {
+        Page <ProductResponseDTO> products = productService.getAllProductsPaginated(pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(products);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable Long id) {
         ProductResponseDTO product = productService.getProductById(id);
@@ -60,8 +70,8 @@ public class ProductController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     @GetMapping("/category/{categoryId}")
-    public ResponseEntity<List<ProductResponseDTO>> getProductsByCategory(@PathVariable Long categoryId) {
-        List<ProductResponseDTO> products = productService.getProductsByCategory(categoryId);
+    public ResponseEntity<Page<ProductResponseDTO>> getProductsByCategory(@PathVariable Long categoryId, Pageable pageable) {
+        Page<ProductResponseDTO> products = productService.getProductsByCategory(categoryId, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(products);
     }
 
