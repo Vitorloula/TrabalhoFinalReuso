@@ -2,6 +2,9 @@ package com.sebastian.inventory_management.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import com.sebastian.inventory_management.DTO.Product.ProductRequestDTO;
 import com.sebastian.inventory_management.DTO.Product.ProductResponseDTO;
 import com.sebastian.inventory_management.model.Product;
@@ -17,7 +20,9 @@ public interface IProductService {
 
     List<ProductResponseDTO> getAllProducts();
 
-    List<ProductResponseDTO> getProductsByCategory(Long categoryId);
+    Page<ProductResponseDTO> getAllProductsPaginated(Pageable pageable);
+
+    Page<ProductResponseDTO> getProductsByCategory(Long categoryId, Pageable pageable);
 
     List<ProductResponseDTO> getProductBySupplierId(Long supplierId);
 

@@ -1,8 +1,8 @@
 package com.sebastian.inventory_management.controller;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -60,8 +60,8 @@ public class SupplierController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     @GetMapping
-    public ResponseEntity<List<SupplierResponseDTO>> getAllSuppliers(){
-        List<SupplierResponseDTO> suppliers = supplierService.getAllSuppliers();
+    public ResponseEntity<Page<SupplierResponseDTO>> getAllSuppliers(Pageable pageable){
+        Page<SupplierResponseDTO> suppliers = supplierService.getAllSuppliers(pageable);
         return ResponseEntity.status(HttpStatus.OK).body(suppliers);
     }
 

@@ -3,6 +3,8 @@ package com.sebastian.inventory_management.service.impl;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.sebastian.inventory_management.DTO.Product.ProductRequestDTO;
@@ -69,13 +71,20 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public List<ProductResponseDTO> getProductsByCategory(Long categoryId) {
+    public Page<ProductResponseDTO> getAllProductsPaginated(Pageable pageable) {
+       Page <Product> products = productRepository.findAll(pageable);
+       return productMapper.toDTOPage(products);
+    }
+
+
+    @Override
+    public Page<ProductResponseDTO> getProductsByCategory(Long categoryId, Pageable pageable) {
         if (!categoryService.existsById(categoryId)) {
             throw new ResourceNotFoundException("Category not found with id: " + categoryId);
         }
 
-        List<Product> products = productRepository.findByCategoryId(categoryId);
-        return productMapper.toDTOList(products);
+        Page<Product> products = productRepository.findByCategoryId(categoryId, pageable);
+        return productMapper.toDTOPage(products);
     }
 
     @Override
@@ -156,4 +165,5 @@ public class ProductServiceImpl implements IProductService {
         });
     }
 
+   
 }
