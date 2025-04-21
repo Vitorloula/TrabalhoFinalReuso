@@ -1,8 +1,9 @@
 package com.sebastian.inventory_management.service.impl;
 
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.sebastian.inventory_management.DTO.Supplier.SupplierRequestDTO;
@@ -55,9 +56,9 @@ public class SupplierServiceImpl implements ISupplierService{
     }
 
     @Override
-    public List<SupplierResponseDTO> getAllSuppliers() {
-        List<Supplier> suppliers = supplierRepository.findAll();
-        return supplierMapper.toDTOList(suppliers);
+    public Page<SupplierResponseDTO> getAllSuppliers(Pageable pageable) {
+        Page<Supplier> suppliers = supplierRepository.findAll(pageable);
+        return supplierMapper.toDTOPage(suppliers);
     }
 
     @Override
