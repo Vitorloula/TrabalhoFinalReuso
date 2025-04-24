@@ -25,6 +25,8 @@ public interface ProductMapper {
 
     @Mapping(source = "category.name", target = "categoryName")
     @Mapping(source = "supplier.name", target = "supplierName")
+    @Mapping(source = "category.id", target = "categoryId")
+    @Mapping(source = "supplier.id", target = "supplierId")
     ProductResponseDTO toDTO(Product product);
 
     List<ProductResponseDTO> toDTOList(List<Product> products);

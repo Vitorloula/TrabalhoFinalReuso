@@ -21,7 +21,9 @@ public class ProductResponseDTO {
     private int stock;
     private BigDecimal price;
     private String categoryName;
+    private Long categoryId;
     private String supplierName;
+    private Long supplierId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
