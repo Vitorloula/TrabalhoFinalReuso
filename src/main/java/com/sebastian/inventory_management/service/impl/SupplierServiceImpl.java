@@ -44,7 +44,13 @@ public class SupplierServiceImpl implements ISupplierService{
     }
 
     @Override
-    public SupplierResponseDTO getSupplierByName(String name) {
+    public Page <SupplierResponseDTO> findByNameContainingIgnoreCase(String name, Pageable pageable) {
+        Page<Supplier> suppliers = supplierRepository.findByNameContainingIgnoreCase(name, pageable);
+        return supplierMapper.toDTOPage(suppliers);
+    }
+
+    @Override
+    public SupplierResponseDTO getSupplierByExactName(String name) {
         Supplier supplier = supplierRepository.findByName(name)
             .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with name: " + name));
         return supplierMapper.toDTO(supplier);
@@ -113,6 +119,8 @@ public class SupplierServiceImpl implements ISupplierService{
             }
         });
     }
+
+   
 
   
 

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sebastian.inventory_management.DTO.Supplier.SupplierRequestDTO;
@@ -45,9 +46,9 @@ public class SupplierController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
-    @GetMapping("/name/{name}")
-    public ResponseEntity<SupplierResponseDTO> getSupplierByName(@PathVariable String name){
-        SupplierResponseDTO supplier = supplierService.getSupplierByName(name);
+    @GetMapping("/search")
+    public ResponseEntity<Page<SupplierResponseDTO>> searchSuppliersByName(@RequestParam String name, Pageable pageable){
+        Page <SupplierResponseDTO> supplier = supplierService.findByNameContainingIgnoreCase(name, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(supplier);
     }
 

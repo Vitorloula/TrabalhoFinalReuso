@@ -13,7 +13,8 @@ public interface ISupplierService {
     SupplierResponseDTO getSupplierById(Long id);
     boolean existsById(Long id);
     Supplier getSupplierByIdEntity(Long id);
-    SupplierResponseDTO getSupplierByName(String name);
+    Page <SupplierResponseDTO> findByNameContainingIgnoreCase(String name, Pageable pageable);
+    SupplierResponseDTO getSupplierByExactName(String name);
     SupplierResponseDTO getSupplierByContactEmail(String contactEmail);
     List<SupplierResponseDTO> getAllSuppliers();
     Page<SupplierResponseDTO> getAllSuppliersPaginated(Pageable pageable);
