@@ -98,9 +98,9 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public List<ProductResponseDTO> findByNameContainingIgnoreCase(String name) {
-        List<Product> products = productRepository.findByNameContainingIgnoreCase(name);
-        return productMapper.toDTOList(products);
+    public Page<ProductResponseDTO> findByNameContainingIgnoreCase(String name, Pageable pageable) {
+        Page<Product> products = productRepository.findByNameContainingIgnoreCase(name, pageable);
+        return productMapper.toDTOPage(products);
     }
 
     @Override

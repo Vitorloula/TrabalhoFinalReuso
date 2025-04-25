@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sebastian.inventory_management.DTO.Product.ProductRequestDTO;
@@ -83,9 +84,9 @@ public class ProductController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
-    @GetMapping("/search/{name}")
-    public ResponseEntity<List<ProductResponseDTO>> searchProductsByName(@PathVariable String name) {
-        List<ProductResponseDTO> products = productService.findByNameContainingIgnoreCase(name);
+    @GetMapping("/search")
+    public ResponseEntity<Page<ProductResponseDTO>> searchProductsByName(@RequestParam String name, Pageable pageable) {
+        Page<ProductResponseDTO> products = productService.findByNameContainingIgnoreCase(name, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(products);
     }
 

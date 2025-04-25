@@ -26,7 +26,7 @@ public interface IProductService {
 
     List<ProductResponseDTO> getProductBySupplierId(Long supplierId);
 
-    List<ProductResponseDTO> findByNameContainingIgnoreCase(String name);
+    Page<ProductResponseDTO> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
     List<ProductResponseDTO> findByStockLessThan(int stockThreshold);
 

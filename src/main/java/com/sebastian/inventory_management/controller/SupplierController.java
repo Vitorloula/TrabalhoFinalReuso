@@ -61,7 +61,7 @@ public class SupplierController {
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     @GetMapping
     public ResponseEntity<Page<SupplierResponseDTO>> getAllSuppliers(Pageable pageable){
-        Page<SupplierResponseDTO> suppliers = supplierService.getAllSuppliers(pageable);
+        Page<SupplierResponseDTO> suppliers = supplierService.getAllSuppliersPaginated(pageable);
         return ResponseEntity.status(HttpStatus.OK).body(suppliers);
     }
 

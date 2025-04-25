@@ -1,6 +1,8 @@
 package com.sebastian.inventory_management.service.impl;
 
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -56,7 +58,13 @@ public class SupplierServiceImpl implements ISupplierService{
     }
 
     @Override
-    public Page<SupplierResponseDTO> getAllSuppliers(Pageable pageable) {
+    public List<SupplierResponseDTO> getAllSuppliers() {
+        List<Supplier> suppliers = supplierRepository.findAll();
+        return supplierMapper.toDTOList(suppliers);
+    }
+
+    @Override
+    public Page<SupplierResponseDTO> getAllSuppliersPaginated(Pageable pageable) {
         Page<Supplier> suppliers = supplierRepository.findAll(pageable);
         return supplierMapper.toDTOPage(suppliers);
     }
@@ -105,6 +113,8 @@ public class SupplierServiceImpl implements ISupplierService{
             }
         });
     }
+
+  
 
     
 }

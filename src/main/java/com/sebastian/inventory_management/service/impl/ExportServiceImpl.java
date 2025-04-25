@@ -5,6 +5,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
 import com.sebastian.inventory_management.DTO.Product.ProductResponseDTO;
+import com.sebastian.inventory_management.DTO.Supplier.SupplierResponseDTO;
 import com.sebastian.inventory_management.service.IExportService;
 
 import java.io.ByteArrayInputStream;
@@ -44,6 +45,34 @@ public class ExportServiceImpl implements IExportService {
 
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
+        }
+    }
+
+    @Override
+    public ByteArrayInputStream exportSuppliersToExcel(List<SupplierResponseDTO> suppliers) throws IOException {
+        String[] COLUMNs = { "ID", "Nombre", "Email de Contacto", "Numero de Telefono"};
+
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("Proveedores");
+
+            Row headerRow = sheet.createRow(0);
+            for (int col = 0; col < COLUMNs.length; col++) {
+                Cell cell = headerRow.createCell(col);
+                cell.setCellValue(COLUMNs[col]);
+            }
+
+            int rowIdx = 1;
+            for (SupplierResponseDTO supplier : suppliers) {
+                Row row = sheet.createRow(rowIdx++);
+                row.createCell(0).setCellValue(supplier.getId());
+                row.createCell(1).setCellValue(supplier.getName());
+                row.createCell(2).setCellValue(supplier.getContactEmail());
+                row.createCell(3).setCellValue(supplier.getPhoneNumber());  
+            }
+
+            workbook.write(out);
+            return new ByteArrayInputStream(out.toByteArray());
+
         }
     }
 }

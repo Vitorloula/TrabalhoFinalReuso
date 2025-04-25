@@ -19,7 +19,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     List<Product> findBySupplierId(Long supplierId);
 
-    List<Product> findByNameContainingIgnoreCase(String name);
+    Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
     Optional<Product> findByName(String name);
 
