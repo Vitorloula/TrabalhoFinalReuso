@@ -1,11 +1,15 @@
 package com.sebastian.inventory_management.service.impl;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +24,7 @@ import com.sebastian.inventory_management.mapper.OrderMapper;
 import com.sebastian.inventory_management.model.InventoryMovement;
 import com.sebastian.inventory_management.model.Order;
 import com.sebastian.inventory_management.model.OrderItem;
+import com.sebastian.inventory_management.model.OrderSpecification;
 import com.sebastian.inventory_management.model.Product;
 import com.sebastian.inventory_management.model.Supplier;
 import com.sebastian.inventory_management.model.User;
@@ -110,6 +115,12 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
+    public Page<OrderResponseDTO> getAllOrdersPageable(Pageable pageable) {
+        Page<Order> orders = orderRepository.findAll(pageable);
+        return orderMapper.toDTOPage(orders);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<OrderResponseDTO> getOrdersBySupplier(Long supplierId) {
         Supplier supplier = supplierService.getSupplierByIdEntity(supplierId);
@@ -197,6 +208,13 @@ public class OrderServiceImpl implements IOrderService {
             movementRepository.save(movement);
             productRepository.save(item.getProduct());
         }
+    }
+
+    @Override
+    public Page<OrderResponseDTO> searchOrders(String orderNumber, Long supplierId, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+        Specification<Order> spec = OrderSpecification.withFilters(orderNumber, supplierId, startDate, endDate);
+        Page<Order> ordersPage = orderRepository.findAll(spec, pageable);
+        return orderMapper.toDTOPage(ordersPage);
     }
 
 }

@@ -1,9 +1,12 @@
 package com.sebastian.inventory_management.controller;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -65,6 +68,26 @@ public class OrderController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @GetMapping("/paginated")
+    public ResponseEntity<Page<OrderResponseDTO>> getAllOrdersPageable(Pageable pageable) {
+        Page<OrderResponseDTO> orders = orderService.getAllOrdersPageable(pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(orders);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<OrderResponseDTO>> searchOrders(
+            @RequestParam(required = false) String orderNumber,
+            @RequestParam(required = false) Long supplierId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            Pageable pageable) {
+
+        Page<OrderResponseDTO> result = orderService.searchOrders(orderNumber, supplierId, startDate, endDate,
+                pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     @GetMapping("/supplier/{supplierId}")
     public ResponseEntity<List<OrderResponseDTO>> getOrdersBySupplier(@PathVariable Long supplierId) {
         List<OrderResponseDTO> orders = orderService.getOrdersBySupplier(supplierId);
@@ -95,7 +118,8 @@ public class OrderController {
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<OrderResponseDTO> updateOrder(@PathVariable Long id, @RequestBody @Valid OrderRequestDTO orderDTO) {
+    public ResponseEntity<OrderResponseDTO> updateOrder(@PathVariable Long id,
+            @RequestBody @Valid OrderRequestDTO orderDTO) {
         OrderResponseDTO updatedOrder = orderService.updateOrder(id, orderDTO);
         return ResponseEntity.status(HttpStatus.OK).body(updatedOrder);
     }

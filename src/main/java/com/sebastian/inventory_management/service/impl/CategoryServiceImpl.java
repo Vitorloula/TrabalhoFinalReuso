@@ -3,6 +3,8 @@ package com.sebastian.inventory_management.service.impl;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -93,5 +95,17 @@ public class CategoryServiceImpl implements ICategoryService   {
                 throw new IllegalArgumentException("Category with name '" + name + "' already exists.");
             }
         });
+    }
+
+    @Override
+    public Page<CategoryResponseDTO> getAllPageableCategories(Pageable pageable) {
+        Page<Category> categories = categoryRepository.findAll(pageable);
+        return categoryMapper.toDTOPage(categories);
+    }
+
+    @Override
+    public Page<CategoryResponseDTO> findByNameContainingIgnoreCase(String name, Pageable pageable) {
+        Page<Category> categories = categoryRepository.findByNameContainingIgnoreCase(name, pageable);
+        return categoryMapper.toDTOPage(categories);
     }
 }

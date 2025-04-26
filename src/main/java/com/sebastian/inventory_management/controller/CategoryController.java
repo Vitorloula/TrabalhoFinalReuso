@@ -13,7 +13,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import com.sebastian.inventory_management.DTO.Category.CategoryRequestDTO;
 import com.sebastian.inventory_management.DTO.Category.CategoryResponseDTO;
@@ -50,6 +53,21 @@ public class CategoryController {
     @GetMapping("/name/{name}")
     public ResponseEntity<CategoryResponseDTO> getCategoryByName(@PathVariable String name) {
         CategoryResponseDTO category = categoryService.getCategoryByName(name);
+        return ResponseEntity.status(HttpStatus.OK).body(category);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @GetMapping("/search")
+    public ResponseEntity<Page<CategoryResponseDTO>> searchProductsByName(@RequestParam String name, Pageable pageable) {
+        Page <CategoryResponseDTO> category = categoryService.findByNameContainingIgnoreCase(name, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(category);
+    }
+
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @GetMapping("/paginated")
+    public ResponseEntity<Page<CategoryResponseDTO>> getAllPaginatedCategory(Pageable pageable) {
+        Page <CategoryResponseDTO> category = categoryService.getAllPageableCategories(pageable);
         return ResponseEntity.status(HttpStatus.OK).body(category);
     }
 

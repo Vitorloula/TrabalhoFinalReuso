@@ -1,5 +1,7 @@
 package com.sebastian.inventory_management.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -60,9 +62,16 @@ public class SupplierController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
-    @GetMapping
-    public ResponseEntity<Page<SupplierResponseDTO>> getAllSuppliers(Pageable pageable){
+    @GetMapping("/paginated")
+    public ResponseEntity<Page<SupplierResponseDTO>> getAllPaginatedSuppliers(Pageable pageable){
         Page<SupplierResponseDTO> suppliers = supplierService.getAllSuppliersPaginated(pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(suppliers);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @GetMapping
+    public ResponseEntity<List<SupplierResponseDTO>> getAllSuppliers(){
+        List<SupplierResponseDTO> suppliers = supplierService.getAllSuppliers();
         return ResponseEntity.status(HttpStatus.OK).body(suppliers);
     }
 
