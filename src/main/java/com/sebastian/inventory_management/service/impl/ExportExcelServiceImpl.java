@@ -9,7 +9,8 @@ import com.sebastian.inventory_management.DTO.Order.OrderResponseDTO;
 import com.sebastian.inventory_management.DTO.OrderItem.OrderItemResponseDTO;
 import com.sebastian.inventory_management.DTO.Product.ProductResponseDTO;
 import com.sebastian.inventory_management.DTO.Supplier.SupplierResponseDTO;
-import com.sebastian.inventory_management.service.IExportService;
+import com.sebastian.inventory_management.DTO.User.UserResponseDTO;
+import com.sebastian.inventory_management.service.IExportExcelService;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -18,7 +19,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Service
-public class ExportServiceImpl implements IExportService {
+public class ExportExcelServiceImpl implements IExportExcelService {
 
     @Override
     public ByteArrayInputStream exportProductsToExcel(List<ProductResponseDTO> products) throws IOException {
@@ -166,6 +167,38 @@ public class ExportServiceImpl implements IExportService {
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
+
+    @Override
+    public ByteArrayInputStream exportUsersToExcel(List<UserResponseDTO> users) throws IOException {
+        String[] COLUMNs = {
+                "ID", "Nombre", "Apellido", "Email", "Rol", "Habilitado"
+        };
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("Usuarios");
+    
+            Row headerRow = sheet.createRow(0);
+            for (int col = 0; col < COLUMNs.length; col++) {
+                Cell cell = headerRow.createCell(col);
+                cell.setCellValue(COLUMNs[col]);
+            }
+    
+            int rowIdx = 1;
+    
+            for (UserResponseDTO user : users) {
+                Row row = sheet.createRow(rowIdx++);
+                row.createCell(0).setCellValue(user.getId());
+                row.createCell(1).setCellValue(user.getName());
+                row.createCell(2).setCellValue(user.getLastName());
+                row.createCell(3).setCellValue(user.getEmail());
+                row.createCell(4).setCellValue(user.getRole().toString());
+                row.createCell(5).setCellValue(user.isEnabled() ? "Sí" : "No");
+            }
+    
+            workbook.write(out);
+            return new ByteArrayInputStream(out.toByteArray());
+        }
+    };
+
     
 
 }

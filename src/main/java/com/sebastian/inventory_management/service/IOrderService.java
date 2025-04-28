@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.sebastian.inventory_management.DTO.Order.OrderCountByMonthDTO;
+import com.sebastian.inventory_management.DTO.Order.OrderMonthlyDTO;
 import com.sebastian.inventory_management.DTO.Order.OrderRequestDTO;
 import com.sebastian.inventory_management.DTO.Order.OrderResponseDTO;
 import com.sebastian.inventory_management.model.Order;
@@ -27,6 +28,7 @@ public interface IOrderService {
     OrderResponseDTO updateOrder(Long id, OrderRequestDTO orderDTO);
     OrderCountByMonthDTO countOrdersByMonth();
     List<OrderResponseDTO> findRecentOrders();
+    List<OrderMonthlyDTO> getOrderCountLastMonths(int months);
     void deleteOrder(Long id);
     Order getOrderByIdEntity(Long id);
 }

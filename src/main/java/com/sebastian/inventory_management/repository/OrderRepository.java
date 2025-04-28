@@ -39,4 +39,16 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
                         "FROM Order o JOIN o.supplier s ORDER BY o.orderDate DESC")
         List<OrderResponseDTO> findRecentOrders();
 
+        @Query("""
+                SELECT
+                YEAR(o.orderDate) as year,
+                MONTH(o.orderDate) as month,
+                COUNT(o) as count
+                FROM Order o
+                WHERE o.orderDate BETWEEN :startDate AND :endDate
+                GROUP BY YEAR(o.orderDate), MONTH(o.orderDate)
+                ORDER BY YEAR(o.orderDate), MONTH(o.orderDate)
+                """)
+        List<Object[]> countOrdersGroupedByMonth(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+
 }

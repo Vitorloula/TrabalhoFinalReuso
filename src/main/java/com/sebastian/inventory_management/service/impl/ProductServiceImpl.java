@@ -88,6 +88,16 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
+    public List<ProductResponseDTO> getProductsByCategory(Long categoryId) {
+        if (!categoryService.existsById(categoryId)) {
+            throw new ResourceNotFoundException("Category not found with id: " + categoryId);
+        }
+
+        List<Product> products = productRepository.findByCategoryId(categoryId);
+        return productMapper.toDTOList(products);
+    }
+
+    @Override
     public List<ProductResponseDTO> getProductBySupplierId(Long supplierId) {
         if (!supplierService.existsById(supplierId)) {
             throw new ResourceNotFoundException("Supplier not found with id: " + supplierId);
@@ -164,6 +174,8 @@ public class ProductServiceImpl implements IProductService {
             }
         });
     }
+
+   
 
    
 }

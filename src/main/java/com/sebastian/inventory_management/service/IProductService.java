@@ -23,6 +23,8 @@ public interface IProductService {
     Page<ProductResponseDTO> getAllProductsPaginated(Pageable pageable);
 
     Page<ProductResponseDTO> getProductsByCategory(Long categoryId, Pageable pageable);
+    
+    List<ProductResponseDTO> getProductsByCategory(Long categoryId);
 
     List<ProductResponseDTO> getProductBySupplierId(Long supplierId);
 

@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sebastian.inventory_management.DTO.Order.OrderCountByMonthDTO;
+import com.sebastian.inventory_management.DTO.Order.OrderMonthlyDTO;
 import com.sebastian.inventory_management.DTO.Order.OrderRequestDTO;
 import com.sebastian.inventory_management.DTO.Order.OrderResponseDTO;
 import com.sebastian.inventory_management.service.IOrderService;
@@ -110,6 +111,13 @@ public class OrderController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @GetMapping("/orders-per-month")
+    public ResponseEntity<List<OrderMonthlyDTO>> getOrdersPerMonth(@RequestParam(defaultValue = "5") int months) {
+        List<OrderMonthlyDTO> orderResponseDTO = orderService.getOrderCountLastMonths(months);
+        return ResponseEntity.status(HttpStatus.OK).body(orderResponseDTO);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     @GetMapping("/recent")
     public ResponseEntity<List<OrderResponseDTO>> getRecentOrders() {
         List<OrderResponseDTO> orderResponseDTO = orderService.findRecentOrders();
@@ -130,4 +138,5 @@ public class OrderController {
         orderService.deleteOrder(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
+
 }

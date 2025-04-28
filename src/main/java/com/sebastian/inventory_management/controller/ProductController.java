@@ -70,6 +70,13 @@ public class ProductController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @GetMapping("/category/{categoryId}/all")
+    public ResponseEntity<List<ProductResponseDTO>> getProductsByCategory(@PathVariable Long categoryId) {
+        List<ProductResponseDTO> products = productService.getProductsByCategory(categoryId);
+        return ResponseEntity.status(HttpStatus.OK).body(products);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<Page<ProductResponseDTO>> getProductsByCategory(@PathVariable Long categoryId, Pageable pageable) {
         Page<ProductResponseDTO> products = productService.getProductsByCategory(categoryId, pageable);

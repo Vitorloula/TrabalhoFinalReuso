@@ -1,7 +1,7 @@
 package com.sebastian.inventory_management.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sebastian.inventory_management.DTO.User.UserRequestDTO;
+import com.sebastian.inventory_management.DTO.User.UserUpdateRequestDTO;
 import com.sebastian.inventory_management.DTO.User.UserResponseDTO;
 import com.sebastian.inventory_management.enums.Role;
 import com.sebastian.inventory_management.service.IUserService;
@@ -33,29 +33,33 @@ public class UserControllerTest {
 
     @Test
     void testAddUser() throws Exception {
-        UserRequestDTO requestDTO = new UserRequestDTO("testuser", "test@example.com", "password", Role.ADMIN);
-        UserResponseDTO responseDTO = new UserResponseDTO(1L, "testuser", "test@example.com", Role.ADMIN, true);
+        UserUpdateRequestDTO requestDTO = new UserUpdateRequestDTO("testuser", "testuserLastname", "test@example.com", Role.ADMIN, true );
+        UserResponseDTO responseDTO = new UserResponseDTO(1L, "testuser", "testuserLastname", "test@example.com", Role.ADMIN, true);
 
-        when(userService.addUser(Mockito.any(UserRequestDTO.class))).thenReturn(responseDTO);
+        when(userService.addUser(Mockito.any(UserUpdateRequestDTO.class))).thenReturn(responseDTO);
 
         mockMvc.perform(post("/api/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.username").value("testuser"))
-                .andExpect(jsonPath("$.email").value("test@example.com"));
+                .andExpect(jsonPath("$.name").value("testuser"))
+                .andExpect(jsonPath("$.lastName").value("testuserLastname"))
+                .andExpect(jsonPath("$.email").value("test@example.com"))
+                .andExpect(jsonPath("$.role").value("ADMIN"))
+                .andExpect(jsonPath("$.enabled").value(true));
     }
 
     @Test
     void testGetUserById() throws Exception {
-        UserResponseDTO responseDTO = new UserResponseDTO(1L, "testuser", "test@example.com", Role.ADMIN, true);
+        UserResponseDTO responseDTO = new UserResponseDTO(1L, "testuser", "testuserLastname", "test@example.com",
+                Role.ADMIN, true);
 
         when(userService.getUserById(1L)).thenReturn(responseDTO);
 
         mockMvc.perform(get("/api/users/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.username").value("testuser"));
+                .andExpect(jsonPath("$.email").value("testuser"));
     }
 }

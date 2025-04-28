@@ -2,7 +2,12 @@ package com.sebastian.inventory_management.service.impl;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.format.TextStyle;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -14,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sebastian.inventory_management.DTO.Order.OrderCountByMonthDTO;
+import com.sebastian.inventory_management.DTO.Order.OrderMonthlyDTO;
 import com.sebastian.inventory_management.DTO.Order.OrderRequestDTO;
 import com.sebastian.inventory_management.DTO.Order.OrderResponseDTO;
 import com.sebastian.inventory_management.DTO.OrderItem.OrderItemRequestDTO;
@@ -215,6 +221,30 @@ public class OrderServiceImpl implements IOrderService {
         Specification<Order> spec = OrderSpecification.withFilters(orderNumber, supplierId, startDate, endDate);
         Page<Order> ordersPage = orderRepository.findAll(spec, pageable);
         return orderMapper.toDTOPage(ordersPage);
+    }
+
+    @Override
+    public List<OrderMonthlyDTO> getOrderCountLastMonths(int months) {
+        LocalDateTime today = LocalDateTime.now();
+        LocalDateTime startDate = today.minusMonths(months - 1).withDayOfMonth(1);
+
+    List<Object[]> results = orderRepository.countOrdersGroupedByMonth(startDate, today);
+
+    Map<YearMonth, Long> counts = results.stream()
+            .collect(Collectors.toMap(
+                    r -> YearMonth.of(((Number) r[0]).intValue(), ((Number) r[1]).intValue()),
+                    r -> (Long) r[2]
+            ));
+
+    List<OrderMonthlyDTO> response = new ArrayList<>();
+    for (int i = 0; i < months; i++) {
+        YearMonth month = YearMonth.from(startDate.plusMonths(i));
+        response.add(new OrderMonthlyDTO(
+                month.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault()),
+                counts.getOrDefault(month, 0L)
+        ));
+    }
+    return response;
     }
 
 }

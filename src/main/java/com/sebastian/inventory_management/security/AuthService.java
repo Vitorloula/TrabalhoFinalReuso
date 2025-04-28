@@ -41,8 +41,10 @@ public class AuthService implements IAuthService {
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
         UserDetails user = userDetailsService.loadUserByUsername(request.getEmail());
+        User userEntity = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
         String token = jwtService.generateToken(user);
-        return new AuthenticationResponse(token, user.getUsername(), user.getAuthorities().toString());
+        return new AuthenticationResponse(token, user.getUsername(), user.getAuthorities().toString(), userEntity.getName(), userEntity.getLastName());
     }
 
     public AuthenticationResponse register(RegisterRequest request) {
@@ -52,7 +54,8 @@ public class AuthService implements IAuthService {
         }
 
         User user = new User();
-        user.setUsername(request.getUsername());
+        user.setName(request.getName());
+        user.setLastName(request.getLastName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(request.getRole());
@@ -61,7 +64,7 @@ public class AuthService implements IAuthService {
 
         String jwtToken = jwtService.generateToken(user);
 
-        return new AuthenticationResponse(jwtToken, user.getUsername(), user.getAuthorities().toString());
+        return new AuthenticationResponse(jwtToken, user.getUsername(), user.getAuthorities().toString(), user.getName(), user.getLastName());
     }
 
 }

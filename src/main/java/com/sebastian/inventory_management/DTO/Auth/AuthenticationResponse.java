@@ -12,7 +12,9 @@ import lombok.Setter;
 public class AuthenticationResponse {
 
     private String token;
-    private String username;
+    private String email;
     private String role;
+    private String name;
+    private String lastName;
 
 }

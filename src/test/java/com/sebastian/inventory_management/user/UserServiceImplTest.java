@@ -12,7 +12,7 @@ import org.mockito.Mock;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.sebastian.inventory_management.DTO.User.UserRequestDTO;
+import com.sebastian.inventory_management.DTO.User.UserUpdateRequestDTO;
 import com.sebastian.inventory_management.DTO.User.UserResponseDTO;
 import com.sebastian.inventory_management.enums.Role;
 import com.sebastian.inventory_management.exception.ResourceNotFoundException;
@@ -35,22 +35,23 @@ class UserServiceImplTest {
     private UserServiceImpl userService;
 
     private User user;
-    private UserRequestDTO userRequestDTO;
+    private UserUpdateRequestDTO userRequestDTO;
     private UserResponseDTO userResponseDTO;
 
     @BeforeEach
     void setUp() {
-        userRequestDTO = new UserRequestDTO("testuser", "test@example.com", "password123", Role.ADMIN);
+        userRequestDTO = new UserUpdateRequestDTO("testuser", "testuserLastname", "test@example.com", Role.ADMIN, true);
         user = User.builder()
                 .id(1L)
-                .username("testuser")
+                .name("testuser")
+                .lastName("testuserLastname")
                 .email("test@example.com")
                 .password("password123")
                 .role(Role.ADMIN)
                 .enabled(true)
                 .movements(new ArrayList<>())
                 .build();
-        userResponseDTO = new UserResponseDTO(1L, "testuser", "test@example.com", Role.ADMIN, true);
+        userResponseDTO = new UserResponseDTO(1L, "testuser","testuserLastname" , "test@example.com", Role.ADMIN, true);
     }
 
     @Test
@@ -102,7 +103,7 @@ class UserServiceImplTest {
         List<UserResponseDTO> result = userService.getAllUsers();
 
         assertEquals(1, result.size());
-        assertEquals("testuser", result.get(0).getUsername());
+        assertEquals("test@example.com", result.get(0).getEmail());
     }
 }
 
