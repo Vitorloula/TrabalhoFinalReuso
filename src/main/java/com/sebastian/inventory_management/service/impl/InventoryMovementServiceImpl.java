@@ -103,6 +103,7 @@ public class InventoryMovementServiceImpl implements IInventoryMovementService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<InventoryMovementResponseDTO> getMonthlyMovementsSummary() {
         return movementRepository.getMonthlyMovementsSummary();
     }

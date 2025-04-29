@@ -3,6 +3,7 @@ package com.sebastian.inventory_management.service.impl;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -10,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.sebastian.inventory_management.DTO.Category.CategoryRequestDTO;
 import com.sebastian.inventory_management.DTO.Category.CategoryResponseDTO;
+import com.sebastian.inventory_management.enums.ActionType;
+import com.sebastian.inventory_management.event.Category.CategoryEvent;
 import com.sebastian.inventory_management.exception.ResourceNotFoundException;
 import com.sebastian.inventory_management.mapper.CategoryMapper;
 import com.sebastian.inventory_management.model.Category;
@@ -19,11 +22,13 @@ import com.sebastian.inventory_management.service.ICategoryService;
 @Service
 public class CategoryServiceImpl implements ICategoryService   {
 
-    private CategoryRepository categoryRepository;
-    private CategoryMapper categoryMapper;
+    private final CategoryRepository categoryRepository;
+    private final CategoryMapper categoryMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    public CategoryServiceImpl(CategoryRepository categoryRepository, CategoryMapper categoryMapper) {
+    public CategoryServiceImpl(CategoryRepository categoryRepository, CategoryMapper categoryMapper, ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
         this.categoryRepository = categoryRepository;
         this.categoryMapper = categoryMapper;
     }
@@ -34,6 +39,7 @@ public class CategoryServiceImpl implements ICategoryService   {
         validateUniqueCategoryName(category.getName(), null);
         Category categoryToSave = categoryMapper.toEntity(category);
         Category savedCategory = categoryRepository.save(categoryToSave);
+        eventPublisher.publishEvent(new CategoryEvent(savedCategory, ActionType.CREATED));
         return categoryMapper.toDTO(savedCategory);
     }
 
@@ -65,6 +71,7 @@ public class CategoryServiceImpl implements ICategoryService   {
     public void deleteCategory(Long id) {
         Category category = getCategoryByIdEntity(id);
         categoryRepository.delete(category);
+        eventPublisher.publishEvent(new CategoryEvent(category, ActionType.DELETED));
     }
 
     @Override
@@ -74,16 +81,19 @@ public class CategoryServiceImpl implements ICategoryService   {
         validateUniqueCategoryName(category.getName(), id);
         categoryMapper.updateEntityFromDto(category, categoryToUpdate);
         categoryRepository.save(categoryToUpdate);
+        eventPublisher.publishEvent(new CategoryEvent(categoryToUpdate, ActionType.UPDATED));
         return categoryMapper.toDTO(categoryToUpdate);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean existsById(Long id) {
         return categoryRepository.existsById(id);
                         
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Category getCategoryByIdEntity(Long id) {
         return categoryRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
@@ -98,12 +108,14 @@ public class CategoryServiceImpl implements ICategoryService   {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<CategoryResponseDTO> getAllPageableCategories(Pageable pageable) {
         Page<Category> categories = categoryRepository.findAll(pageable);
         return categoryMapper.toDTOPage(categories);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<CategoryResponseDTO> findByNameContainingIgnoreCase(String name, Pageable pageable) {
         Page<Category> categories = categoryRepository.findByNameContainingIgnoreCase(name, pageable);
         return categoryMapper.toDTOPage(categories);
