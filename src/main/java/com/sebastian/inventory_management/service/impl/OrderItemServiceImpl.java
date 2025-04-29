@@ -16,8 +16,8 @@ import com.sebastian.inventory_management.service.IOrderItemService;
 @Service
 public class OrderItemServiceImpl implements IOrderItemService {
 
-    private OrderItemRepository orderItemRepository;
-    private OrderItemMapper orderItemMapper;
+    private final OrderItemRepository orderItemRepository;
+    private final OrderItemMapper orderItemMapper;
 
     @Autowired
     public OrderItemServiceImpl(OrderItemRepository repository, OrderItemMapper mapper) {
@@ -42,6 +42,7 @@ public class OrderItemServiceImpl implements IOrderItemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<OrderItemResponseDTO> findByProductId(Long productId) {
         List<OrderItem> orderItems = orderItemRepository.findByProductId(productId);
         return orderItemMapper.toDTOList(orderItems);

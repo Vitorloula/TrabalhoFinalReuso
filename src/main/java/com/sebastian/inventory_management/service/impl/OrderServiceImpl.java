@@ -1,68 +1,112 @@
 package com.sebastian.inventory_management.service.impl;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.format.TextStyle;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.sebastian.inventory_management.DTO.Order.OrderCountByMonthDTO;
+import com.sebastian.inventory_management.DTO.Order.OrderMonthlyDTO;
 import com.sebastian.inventory_management.DTO.Order.OrderRequestDTO;
 import com.sebastian.inventory_management.DTO.Order.OrderResponseDTO;
 import com.sebastian.inventory_management.DTO.OrderItem.OrderItemRequestDTO;
+import com.sebastian.inventory_management.enums.ActionType;
+import com.sebastian.inventory_management.enums.MovementType;
+import com.sebastian.inventory_management.event.Order.OrderEvent;
 import com.sebastian.inventory_management.exception.ResourceNotFoundException;
 import com.sebastian.inventory_management.mapper.OrderItemMapper;
 import com.sebastian.inventory_management.mapper.OrderMapper;
+import com.sebastian.inventory_management.model.InventoryMovement;
 import com.sebastian.inventory_management.model.Order;
 import com.sebastian.inventory_management.model.OrderItem;
+import com.sebastian.inventory_management.model.OrderSpecification;
 import com.sebastian.inventory_management.model.Product;
 import com.sebastian.inventory_management.model.Supplier;
+import com.sebastian.inventory_management.model.User;
+import com.sebastian.inventory_management.repository.InventoryMovementRepository;
 import com.sebastian.inventory_management.repository.OrderRepository;
+import com.sebastian.inventory_management.repository.ProductRepository;
 import com.sebastian.inventory_management.service.IOrderService;
 import com.sebastian.inventory_management.service.IProductService;
 import com.sebastian.inventory_management.service.ISupplierService;
+import com.sebastian.inventory_management.service.IUserService;
 
 @Service
 public class OrderServiceImpl implements IOrderService {
-    
+
     private final OrderRepository orderRepository;
     private final ISupplierService supplierService;
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
     private final IProductService productService;
+    private final IUserService userService;
+    private final InventoryMovementServiceImpl movementService;
+    private final ProductRepository productRepository;
+    private final InventoryMovementRepository movementRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
     public OrderServiceImpl(OrderRepository orderRepository,
-                            ISupplierService supplierService,
-                            OrderMapper orderMapper,
-                            OrderItemMapper orderItemMapper,
-                            IProductService productService) {
+            ISupplierService supplierService,
+            OrderMapper orderMapper,
+            OrderItemMapper orderItemMapper,
+            IProductService productService,
+            IUserService userService,
+            InventoryMovementServiceImpl movementService,
+            ProductRepository productRepository,
+            InventoryMovementRepository movementRepository,
+            ApplicationEventPublisher eventPublisher) {
         this.orderRepository = orderRepository;
         this.supplierService = supplierService;
         this.orderMapper = orderMapper;
         this.orderItemMapper = orderItemMapper;
         this.productService = productService;
+        this.userService = userService;
+        this.movementService = movementService;
+        this.productRepository = productRepository;
+        this.movementRepository = movementRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
+    @Transactional
     public OrderResponseDTO createOrder(OrderRequestDTO orderDTO) {
         Supplier supplier = supplierService.getSupplierByIdEntity(orderDTO.getSupplierId());
 
         Order order = orderMapper.toEntity(orderDTO);
-
         order.setSupplier(supplier);
         order.setOrderDate(LocalDateTime.now());
         order.setOrderNumber(generateOrderNumber());
 
         List<OrderItem> orderItems = mapOrderItems(orderDTO.getItems(), order);
-        order.getItems().addAll(orderItems);
+
+        order.setItems(orderItems);
 
         Order savedOrder = orderRepository.save(order);
-        return orderMapper.toDTO(savedOrder); 
+
+        createInventoryMovementsForOrder(savedOrder);
+
+        eventPublisher.publishEvent(new OrderEvent(savedOrder, ActionType.CREATED));
+
+        return orderMapper.toDTO(savedOrder);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public OrderResponseDTO getOrderById(Long id) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
@@ -70,6 +114,7 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public OrderResponseDTO getOrderByOrderNumber(String orderNumber) {
         Order order = orderRepository.findByOrderNumber(orderNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with order number: " + orderNumber));
@@ -77,12 +122,21 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<OrderResponseDTO> getAllOrders() {
         List<Order> orders = orderRepository.findAll();
         return orderMapper.toDTOList(orders);
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<OrderResponseDTO> getAllOrdersPageable(Pageable pageable) {
+        Page<Order> orders = orderRepository.findAll(pageable);
+        return orderMapper.toDTOPage(orders);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<OrderResponseDTO> getOrdersBySupplier(Long supplierId) {
         Supplier supplier = supplierService.getSupplierByIdEntity(supplierId);
         List<Order> orders = orderRepository.findBySupplierId(supplier.getId());
@@ -90,12 +144,26 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<OrderResponseDTO> getOrdersBetweenDates(LocalDateTime startDate, LocalDateTime endDate) {
         List<Order> orders = orderRepository.findByOrderDateBetween(startDate, endDate);
         return orderMapper.toDTOList(orders);
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public OrderCountByMonthDTO countOrdersByMonth() {
+       return orderRepository.countOrdersByMonth();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderResponseDTO> findRecentOrders() {
+        return orderRepository.findRecentOrders();
+    }
+
+    @Override
+    @Transactional
     public OrderResponseDTO updateOrder(Long id, OrderRequestDTO orderDTO) {
         Order order = getOrderByIdEntity(id);
         Supplier supplier = supplierService.getSupplierByIdEntity(orderDTO.getSupplierId());
@@ -112,15 +180,18 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
+    @Transactional
     public void deleteOrder(Long id) {
         Order order = getOrderByIdEntity(id);
         orderRepository.delete(order);
+        eventPublisher.publishEvent(new OrderEvent(order, ActionType.DELETED));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Order getOrderByIdEntity(Long id) {
         return orderRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
 
     }
 
@@ -129,12 +200,65 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     private List<OrderItem> mapOrderItems(List<OrderItemRequestDTO> itemDTOs, Order order) {
-    return itemDTOs.stream().map(itemDTO -> {
-        Product product = productService.getProductByIdEntity(itemDTO.getProductId());
-        OrderItem orderItem = orderItemMapper.toEntity(itemDTO);
-        orderItem.setProduct(product);
-        orderItem.setOrder(order);
-        return orderItem;
-    }).collect(Collectors.toList());
-}
+        return itemDTOs.stream().map(itemDTO -> {
+            Product product = productService.getProductByIdEntity(itemDTO.getProductId());
+            OrderItem orderItem = orderItemMapper.toEntity(itemDTO);
+            orderItem.setProduct(product);
+            orderItem.setOrder(order);
+            orderItem.setPrice(product.getPrice());
+            return orderItem;
+        }).collect(Collectors.toList());
+    }
+
+    private void createInventoryMovementsForOrder(Order order) {
+        User user = userService.getCurrentUser();
+        for (OrderItem item : order.getItems()) {
+            movementService.updateStock(item.getProduct(), item.getQuantity(), MovementType.IN);
+
+            InventoryMovement movement = InventoryMovement.builder()
+                    .product(item.getProduct())
+                    .quantity(item.getQuantity())
+                    .type(MovementType.IN)
+                    .user(user)
+                    .timestamp(LocalDateTime.now())
+                    .build();
+
+            movementRepository.save(movement);
+            productRepository.save(item.getProduct());
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<OrderResponseDTO> searchOrders(String orderNumber, Long supplierId, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+        Specification<Order> spec = OrderSpecification.withFilters(orderNumber, supplierId, startDate, endDate);
+        Page<Order> ordersPage = orderRepository.findAll(spec, pageable);
+        return orderMapper.toDTOPage(ordersPage);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderMonthlyDTO> getOrderCountLastMonths(int months) {
+        LocalDateTime today = LocalDateTime.now();
+        LocalDateTime startDate = today.minusMonths(months - 1).withDayOfMonth(1);
+
+    List<Object[]> results = orderRepository.countOrdersGroupedByMonth(startDate, today);
+
+    Map<YearMonth, Long> counts = results.stream()
+            .collect(Collectors.toMap(
+                    r -> YearMonth.of(((Number) r[0]).intValue(), ((Number) r[1]).intValue()),
+                    r -> (Long) r[2]
+            ));
+
+    List<OrderMonthlyDTO> response = new ArrayList<>();
+    for (int i = 0; i < months; i++) {
+        YearMonth month = YearMonth.from(startDate.plusMonths(i));
+        response.add(new OrderMonthlyDTO(
+                month.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault()),
+                counts.getOrDefault(month, 0L)
+        ));
+    }
+    return response;
+    }
+
 }

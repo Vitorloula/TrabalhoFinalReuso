@@ -1,6 +1,8 @@
 # Inventory Management System - Backend
 
-A basic inventory management REST API built with **Spring Boot**, designed to handle product stock, supplier relationships, order processing, and manual inventory movements. This project is intended as a foundational backend system for managing inventory in small to mid-sized businesses.
+This repository contains the **backend** of an Inventory Management System built with **Spring Boot**. It exposes a RESTful API to handle business logic and data operations such as product tracking, supplier management, order processing, and manual stock movements.
+
+The backend is designed to serve as the core logic and data provider for the system. It can be consumed by any frontend or external system. A **frontend** client for this system is also available and can be found [here](https://github.com/Sebaspallero/inventory-managment-front).
 
 ## 🚀 Features
 
@@ -12,6 +14,10 @@ A basic inventory management REST API built with **Spring Boot**, designed to ha
 - **Inventory Movements**: Manually register `IN` (incoming) or `OUT` (outgoing) stock operations.
 - **Stock Updates**: Stock levels are automatically updated when a movement is created.
 - **Date-based Queries**: Retrieve orders or movements between date ranges.
+- **User Authentication**: Register users with different roles: `EMPLOYEE` or `ADMIN`.
+- **User Authorization**: Protect endpoints based on user role.
+- **Export Data**: Export data from the system in PDF and Excel format.
+- **Event Listener**: Record activities such as adding a product, creating an order, deleting a supplier, etc.
 
 ## 🧠 Tech Stack
 
@@ -19,33 +25,35 @@ A basic inventory management REST API built with **Spring Boot**, designed to ha
 - Spring Boot 3
 - Spring Data JPA
 - MySQL (or any SQL database)
+- Spring Security + JWT
 - MapStruct
 - Maven
 - Lombok
 - Validation API
-- Junit - Mockito - Postman for testing
+- JUnit & Mockito
+- Postman for testing
+- OpenApi for testing and visual endpoints.
 
 ## 📦 Entities Overview
 
 ### Product
-- Basic unit with name, price, and stock
-- Connected to OrderItems and InventoryMovements
+- Basic unit with name, price, description, stock, etc.
+- Connected to OrderItems and InventoryMovements.
 
 ### User
-- Represents a system user performing inventory actions
+- Represents a system user performing inventory actions.
 
 ### Supplier
-- Provides products
-- Linked to orders
+- Provides products.
+- Linked to orders.
 
 ### Order & OrderItem
-- Each order is placed to a supplier and contains multiple order items
-- Items affect products but **do not update stock directly** yet
+- Each order is placed to a supplier and contains multiple order items.
 
 ### InventoryMovement
-- Manual stock movements (IN or OUT)
-- Updates product stock on creation
-- Linked to both Product and User
+- Manual stock movements (`IN`, `OUT`).
+- Updates product stock on creation.
+- Linked to both Product and User.
 
 ## 🧪 Sample Endpoints
 
@@ -53,15 +61,17 @@ A basic inventory management REST API built with **Spring Boot**, designed to ha
 - `GET /api/orders/{id}` – Retrieve order by ID
 - `POST /api/movements` – Create a manual inventory movement
 - `GET /api/products` – List all products
-- `GET /api/movements/product/{productId}` – Movements by product
+- `GET /api/movements/product/{productId}` – Get movements by product
 
 ## ⚙️ Environment Configuration
 
 Environment variables can be injected via `application.properties`:
 
 ```properties
+spring.datasource.url=${DB_URL}
 spring.datasource.username=${DB_USERNAME}
 spring.datasource.password=${DB_PASSWORD}
+jwt.secret=${JWT_SECRET}
 ```
 
 Set variables in .vscode/launch.json or your environment before running the app.
@@ -78,21 +88,17 @@ Set variables in .vscode/launch.json or your environment before running the app.
 ./mvnw spring-boot:run
 ```
 
-## 📌 Next Steps
+## 🔗Related Repositories
 
-- Secure the API with Spring Security (role-based access)
+- [Frontend Client - React App](https://github.com/Sebaspallero/inventory-managment-front).
 
-- Automate inventory movements from order processing
 
-- Add pagination and filtering
-
-- Frontend integration
 
 ## 📫 Contact
 
 Feel free to reach out:
 
-- GitHub: [@Sebaspallero](https://github.com/Sebaspallero)
+- GitHub: [@Sebaspallero](https://github.com/Sebaspallero) 
 - Email: sebastianpallerodev@gmail.com
 
 ⭐ **Please consider giving it a star!** It helps visibility and motivates further development.

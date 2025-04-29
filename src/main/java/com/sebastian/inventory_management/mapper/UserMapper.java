@@ -5,25 +5,38 @@ import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 
-import com.sebastian.inventory_management.DTO.User.UserRequestDTO;
+import com.sebastian.inventory_management.DTO.User.UserUpdateRequestDTO;
 import com.sebastian.inventory_management.DTO.User.UserResponseDTO;
 import com.sebastian.inventory_management.model.User;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
-    
+
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "movements", ignore = true)
     @Mapping(target = "enabled", ignore = true)
-    User toEntity(UserRequestDTO userRequestDTO);
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "password", ignore = true)
+    User toEntity(UserUpdateRequestDTO userRequestDTO);
 
     UserResponseDTO toDTO(User user);
 
     List<UserResponseDTO> toDTOList(List<User> users);
 
+    default Page<UserResponseDTO> toDTOPage(Page<User> page) {
+        List<UserResponseDTO> dtoList = toDTOList(page.getContent());
+        return new PageImpl<>(dtoList, page.getPageable(), page.getTotalElements());
+    }
+
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "movements", ignore = true)
-    @Mapping(target = "enabled", ignore = true)
-    void updateEntityFromDto(UserRequestDTO dto, @MappingTarget User entity);
+    @Mapping(target = "authorities", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "password", ignore = true)
+    void updateEntityFromDto(UserUpdateRequestDTO dto, @MappingTarget User entity);
 }

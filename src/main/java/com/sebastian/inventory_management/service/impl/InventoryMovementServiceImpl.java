@@ -33,10 +33,10 @@ public class InventoryMovementServiceImpl implements IInventoryMovementService {
 
     @Autowired
     public InventoryMovementServiceImpl(InventoryMovementRepository movementRepository,
-                                         IProductService productService,
-                                         IUserService userService,
-                                         InventoryMovementMapper movementMapper,
-                                         ProductRepository productRepository) {
+            IProductService productService,
+            IUserService userService,
+            InventoryMovementMapper movementMapper,
+            ProductRepository productRepository) {
         this.movementRepository = movementRepository;
         this.productService = productService;
         this.userService = userService;
@@ -102,7 +102,13 @@ public class InventoryMovementServiceImpl implements IInventoryMovementService {
         return movementMapper.toDTOList(movements);
     }
 
-    private void updateStock(Product product, int quantity, MovementType type) {
+    @Override
+    @Transactional(readOnly = true)
+    public List<InventoryMovementResponseDTO> getMonthlyMovementsSummary() {
+        return movementRepository.getMonthlyMovementsSummary();
+    }
+
+    public void updateStock(Product product, int quantity, MovementType type) {
         if (type == MovementType.IN) {
             product.setStock(product.getStock() + quantity);
         } else if (type == MovementType.OUT) {

@@ -1,7 +1,5 @@
 package com.sebastian.inventory_management.DTO.OrderItem;
 
-import java.math.BigDecimal;
-
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -14,14 +12,11 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderItemRequestDTO {
-    
-    @NotNull(message = "Quantity cannot be null")
-    @Min(1)
-    private int quantity;
 
-    @NotNull(message = "Price cannot be null")
-    private BigDecimal price;
+    @NotNull(message = "Quantity is required")
+    @Min(value = 1, message = "Quantity must be at least 1")
+    private Integer quantity;
 
-    @NotNull(message = "Product cannot be null")
+    @NotNull(message = "Product ID is required")
     private Long productId;
 }

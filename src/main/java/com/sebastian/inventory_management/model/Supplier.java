@@ -1,6 +1,10 @@
 package com.sebastian.inventory_management.model;
 
+import java.time.LocalDateTime;
 import java.util.List;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -11,9 +15,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,20 +33,23 @@ public class Supplier {
     private Long id;
 
     @Column(nullable = false, unique = true, name = "name")
-    @NotBlank(message = "Name is mandatory")
     private String name;
 
     @Column(nullable = false, unique = true, name = "contact_email")
-    @NotBlank(message = "Contact email is mandatory")
-    @Email(message = "Invalid email format") 
     private String contactEmail;
 
     @Column(nullable = false, unique = true, name = "phone_number")
-    @NotBlank(message = "Phone number is mandatory")
-    @Pattern(regexp = "\\d{10,15}", message = "Invalid phone number")
     private String phoneNumber;
+
+    @Column(name = "created_at", updatable = false)
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Product> products;
-    
+
 }

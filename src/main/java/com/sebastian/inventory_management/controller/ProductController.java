@@ -2,8 +2,12 @@ package com.sebastian.inventory_management.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sebastian.inventory_management.DTO.Product.ProductRequestDTO;
@@ -22,73 +27,121 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
-    
+
     private IProductService productService;
 
     public ProductController(IProductService productService) {
         this.productService = productService;
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping
     public ResponseEntity<ProductResponseDTO> createProduct(@Valid @RequestBody ProductRequestDTO productRequest) {
         ProductResponseDTO createdProduct = productService.saveProduct(productRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     @GetMapping
     public ResponseEntity<List<ProductResponseDTO>> getAllProducts() {
         List<ProductResponseDTO> products = productService.getAllProducts();
         return ResponseEntity.status(HttpStatus.OK).body(products);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @GetMapping("/paginated")
+    public ResponseEntity<Page<ProductResponseDTO>> getAllProducts(@PageableDefault(size = 10) Pageable pageable) {
+        Page <ProductResponseDTO> products = productService.getAllProductsPaginated(pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(products);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable Long id) {
         ProductResponseDTO product = productService.getProductById(id);
         return ResponseEntity.status(HttpStatus.OK).body(product);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     @GetMapping("/name/{name}")
     public ResponseEntity<ProductResponseDTO> getProductByName(@PathVariable String name) {
         ProductResponseDTO product = productService.getProductByName(name);
         return ResponseEntity.status(HttpStatus.OK).body(product);
     }
 
-    @GetMapping("/category/{categoryId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @GetMapping("/category/{categoryId}/all")
     public ResponseEntity<List<ProductResponseDTO>> getProductsByCategory(@PathVariable Long categoryId) {
         List<ProductResponseDTO> products = productService.getProductsByCategory(categoryId);
         return ResponseEntity.status(HttpStatus.OK).body(products);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<Page<ProductResponseDTO>> getProductsByCategory(@PathVariable Long categoryId, Pageable pageable) {
+        Page<ProductResponseDTO> products = productService.getProductsByCategory(categoryId, pageable);
+        return ResponseEntity.status(HttpStatus.OK).body(products);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     @GetMapping("/supplier/{supplierId}")
     public ResponseEntity<List<ProductResponseDTO>> getProductsBySupplierId(@PathVariable Long supplierId) {
         List<ProductResponseDTO> products = productService.getProductBySupplierId(supplierId);
         return ResponseEntity.status(HttpStatus.OK).body(products);
     }
 
-    @GetMapping("/search/{name}")
-    public ResponseEntity<List<ProductResponseDTO>> searchProductsByName(@PathVariable String name) {
-        List<ProductResponseDTO> products = productService.findByNameContainingIgnoreCase(name);
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @GetMapping("/search")
+    public ResponseEntity<Page<ProductResponseDTO>> searchProductsByName(@RequestParam String name, Pageable pageable) {
+        Page<ProductResponseDTO> products = productService.findByNameContainingIgnoreCase(name, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(products);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     @GetMapping("/stock/less/{stockThreshold}")
     public ResponseEntity<List<ProductResponseDTO>> getProductsByStockLessThan(@PathVariable int stockThreshold) {
         List<ProductResponseDTO> products = productService.findByStockLessThan(stockThreshold);
         return ResponseEntity.status(HttpStatus.OK).body(products);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     @GetMapping("/stock/more/{stockThreshold}")
     public ResponseEntity<List<ProductResponseDTO>> getProductsByStockMoreThan(@PathVariable int stockThreshold) {
         List<ProductResponseDTO> products = productService.findByStockMoreThan(stockThreshold);
         return ResponseEntity.status(HttpStatus.OK).body(products);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @GetMapping("/total-inventory")
+    public ResponseEntity<Integer> getTotalInventory() {
+        Integer totalInventory = productService.getTotalInventory();
+        return ResponseEntity.status(HttpStatus.OK).body(totalInventory);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @GetMapping("/inventory-by-category")
+    public ResponseEntity<List<ProductResponseDTO>> getInventoryByCategory() {
+        List<ProductResponseDTO> inventoryByCategory = productService.getInventoryByCategory();
+        return ResponseEntity.status(HttpStatus.OK).body(inventoryByCategory);
+        
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
+    @GetMapping("/products-by-category")
+    public ResponseEntity<List<ProductResponseDTO>> countProductsByCategory() {
+        List<ProductResponseDTO> productsByCategory = productService.countProductsByCategory();
+        return ResponseEntity.status(HttpStatus.OK).body(productsByCategory);
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<ProductResponseDTO> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductRequestDTO productRequest) {
+    public ResponseEntity<ProductResponseDTO> updateProduct(@PathVariable Long id,
+            @Valid @RequestBody ProductRequestDTO productRequest) {
         ProductResponseDTO updatedProduct = productService.updateProduct(id, productRequest);
         return ResponseEntity.status(HttpStatus.OK).body(updatedProduct);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);

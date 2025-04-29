@@ -1,13 +1,23 @@
 package com.sebastian.inventory_management.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.sebastian.inventory_management.DTO.User.UserRequestDTO;
+import com.sebastian.inventory_management.DTO.User.UserUpdateRequestDTO;
 import com.sebastian.inventory_management.DTO.User.UserResponseDTO;
+import com.sebastian.inventory_management.DTO.User.UserStatsResponseDTO;
+import com.sebastian.inventory_management.enums.Role;
 import com.sebastian.inventory_management.exception.ResourceNotFoundException;
 import com.sebastian.inventory_management.mapper.UserMapper;
 import com.sebastian.inventory_management.model.User;
@@ -15,10 +25,10 @@ import com.sebastian.inventory_management.repository.UserRepository;
 import com.sebastian.inventory_management.service.IUserService;
 
 @Service
-public class UserServiceImpl implements IUserService{
-    
-    private UserRepository userRepository;
-    private UserMapper userMapper;
+public class UserServiceImpl implements IUserService, UserDetailsService {
+
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, UserMapper userMapper) {
@@ -28,23 +38,23 @@ public class UserServiceImpl implements IUserService{
 
     @Override
     @Transactional
-    public UserResponseDTO addUser(UserRequestDTO user) {
+    public UserResponseDTO addUser(UserUpdateRequestDTO user) {
         User userToSave = userMapper.toEntity(user);
         User savedUser = userRepository.save(userToSave);
         return userMapper.toDTO(savedUser);
     }
-    
+
     @Override
     @Transactional(readOnly = true)
     public UserResponseDTO getUserById(Long id) {
         User user = userRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         return userMapper.toDTO(user);
     }
 
     @Override
     @Transactional
-    public UserResponseDTO updateUser(Long id, UserRequestDTO user) {
+    public UserResponseDTO updateUser(Long id, UserUpdateRequestDTO user) {
         User userToUpdate = getUserByIdEntity(id);
         userMapper.updateEntityFromDto(user, userToUpdate);
         userRepository.save(userToUpdate);
@@ -60,17 +70,9 @@ public class UserServiceImpl implements IUserService{
 
     @Override
     @Transactional(readOnly = true)
-    public UserResponseDTO getUserByUsername(String username) {
-        User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
-        return userMapper.toDTO(user);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public UserResponseDTO getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
         return userMapper.toDTO(user);
     }
 
@@ -83,8 +85,82 @@ public class UserServiceImpl implements IUserService{
 
     @Override
     @Transactional(readOnly = true)
+    public Page<UserResponseDTO> getAllUsersPaginated(Pageable pageable) {
+        Page<User> users = userRepository.findAll(pageable);
+        return userMapper.toDTOPage(users);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public User getUserByIdEntity(Long id) {
         return userRepository.findById(id)
-        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+
+        return new org.springframework.security.core.userdetails.User(
+                user.getUsername(),
+                user.getPassword(),
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public User getCurrentUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserStatsResponseDTO getUserStats() {
+        long totalUsers = 0;
+        long totalAdmins = 0;
+        long totalEmployees = 0;
+        long newUsers = 0;
+    
+        try {
+            totalUsers = userRepository.count();
+        } catch (Exception e) {
+            totalUsers = 0;
+        }
+    
+        try {
+            totalAdmins = userRepository.countByRole(Role.ADMIN);
+        } catch (Exception e) {
+            totalAdmins = 0; 
+        }
+    
+        try {
+            totalEmployees = userRepository.countByRole(Role.EMPLOYEE);
+        } catch (Exception e) {
+            totalEmployees = 0;
+        }
+    
+        try {
+            newUsers = userRepository.countNewUsersInLast30Days(LocalDateTime.now().minusDays(30));
+        } catch (Exception e) {
+            newUsers = 0;
+        }
+    
+        return new UserStatsResponseDTO(totalUsers, totalAdmins, totalEmployees, newUsers);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserResponseDTO> findByNameContainingIgnoreCase(String name, Pageable pageable) {
+        Page<User> users = userRepository.findByNameContainingIgnoreCase(name, pageable);
+        return userMapper.toDTOPage(users);
+    }
+    
+
+
+    
 }
