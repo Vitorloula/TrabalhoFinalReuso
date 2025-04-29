@@ -12,6 +12,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -23,7 +24,9 @@ import com.sebastian.inventory_management.DTO.Order.OrderMonthlyDTO;
 import com.sebastian.inventory_management.DTO.Order.OrderRequestDTO;
 import com.sebastian.inventory_management.DTO.Order.OrderResponseDTO;
 import com.sebastian.inventory_management.DTO.OrderItem.OrderItemRequestDTO;
+import com.sebastian.inventory_management.enums.ActionType;
 import com.sebastian.inventory_management.enums.MovementType;
+import com.sebastian.inventory_management.event.Order.OrderEvent;
 import com.sebastian.inventory_management.exception.ResourceNotFoundException;
 import com.sebastian.inventory_management.mapper.OrderItemMapper;
 import com.sebastian.inventory_management.mapper.OrderMapper;
@@ -54,6 +57,7 @@ public class OrderServiceImpl implements IOrderService {
     private final InventoryMovementServiceImpl movementService;
     private final ProductRepository productRepository;
     private final InventoryMovementRepository movementRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
     public OrderServiceImpl(OrderRepository orderRepository,
@@ -64,7 +68,8 @@ public class OrderServiceImpl implements IOrderService {
             IUserService userService,
             InventoryMovementServiceImpl movementService,
             ProductRepository productRepository,
-            InventoryMovementRepository movementRepository) {
+            InventoryMovementRepository movementRepository,
+            ApplicationEventPublisher eventPublisher) {
         this.orderRepository = orderRepository;
         this.supplierService = supplierService;
         this.orderMapper = orderMapper;
@@ -74,6 +79,7 @@ public class OrderServiceImpl implements IOrderService {
         this.movementService = movementService;
         this.productRepository = productRepository;
         this.movementRepository = movementRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -93,6 +99,8 @@ public class OrderServiceImpl implements IOrderService {
         Order savedOrder = orderRepository.save(order);
 
         createInventoryMovementsForOrder(savedOrder);
+
+        eventPublisher.publishEvent(new OrderEvent(savedOrder, ActionType.CREATED));
 
         return orderMapper.toDTO(savedOrder);
     }
@@ -121,6 +129,7 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<OrderResponseDTO> getAllOrdersPageable(Pageable pageable) {
         Page<Order> orders = orderRepository.findAll(pageable);
         return orderMapper.toDTOPage(orders);
@@ -142,11 +151,13 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public OrderCountByMonthDTO countOrdersByMonth() {
        return orderRepository.countOrdersByMonth();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<OrderResponseDTO> findRecentOrders() {
         return orderRepository.findRecentOrders();
     }
@@ -173,6 +184,7 @@ public class OrderServiceImpl implements IOrderService {
     public void deleteOrder(Long id) {
         Order order = getOrderByIdEntity(id);
         orderRepository.delete(order);
+        eventPublisher.publishEvent(new OrderEvent(order, ActionType.DELETED));
     }
 
     @Override
@@ -217,6 +229,7 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<OrderResponseDTO> searchOrders(String orderNumber, Long supplierId, LocalDate startDate, LocalDate endDate, Pageable pageable) {
         Specification<Order> spec = OrderSpecification.withFilters(orderNumber, supplierId, startDate, endDate);
         Page<Order> ordersPage = orderRepository.findAll(spec, pageable);
@@ -224,6 +237,7 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<OrderMonthlyDTO> getOrderCountLastMonths(int months) {
         LocalDateTime today = LocalDateTime.now();
         LocalDateTime startDate = today.minusMonths(months - 1).withDayOfMonth(1);

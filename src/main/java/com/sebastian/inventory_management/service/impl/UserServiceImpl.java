@@ -27,8 +27,8 @@ import com.sebastian.inventory_management.service.IUserService;
 @Service
 public class UserServiceImpl implements IUserService, UserDetailsService {
 
-    private UserRepository userRepository;
-    private UserMapper userMapper;
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, UserMapper userMapper) {
@@ -84,6 +84,7 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<UserResponseDTO> getAllUsersPaginated(Pageable pageable) {
         Page<User> users = userRepository.findAll(pageable);
         return userMapper.toDTOPage(users);
@@ -97,6 +98,7 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
@@ -109,6 +111,7 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public User getCurrentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByEmail(email)
@@ -116,6 +119,7 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserStatsResponseDTO getUserStats() {
         long totalUsers = 0;
         long totalAdmins = 0;
@@ -150,6 +154,7 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<UserResponseDTO> findByNameContainingIgnoreCase(String name, Pageable pageable) {
         Page<User> users = userRepository.findByNameContainingIgnoreCase(name, pageable);
         return userMapper.toDTOPage(users);
