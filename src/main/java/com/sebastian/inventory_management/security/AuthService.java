@@ -2,8 +2,7 @@ package com.sebastian.inventory_management.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,18 +17,14 @@ import com.sebastian.inventory_management.service.IAuthService;
 @Service
 public class AuthService implements IAuthService {
 
-    private AuthenticationManager authenticationManager;
     private JwtService jwtService;
-    private UserDetailsService userDetailsService;
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
 
     @Autowired
     public AuthService(AuthenticationManager authenticationManager, JwtService jwtService,
             UserDetailsService userDetailsService, UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
-        this.userDetailsService = userDetailsService;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
 
@@ -37,14 +32,20 @@ public class AuthService implements IAuthService {
 
     @Override
     public AuthenticationResponse login(AuthenticationRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
-        UserDetails user = userDetailsService.loadUserByUsername(request.getEmail());
-        User userEntity = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new BadCredentialsException("User not found"));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Invalid password");
+        }
+
+        if(user.isEnabled() == false) {
+            throw new BadCredentialsException("User is not enabled");
+        }
+
         String token = jwtService.generateToken(user);
-        return new AuthenticationResponse(token, user.getUsername(), user.getAuthorities().toString(), userEntity.getName(), userEntity.getLastName());
+        return new AuthenticationResponse(token, user.getUsername(), user.getAuthorities().toString(), user.getName(), user.getLastName());
     }
 
     public AuthenticationResponse register(RegisterRequest request) {

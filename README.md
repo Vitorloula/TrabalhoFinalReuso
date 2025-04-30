@@ -11,7 +11,7 @@ The backend is designed to serve as the core logic and data provider for the sys
 - **Supplier Management**: Store and retrieve supplier data.
 - **Order Management**: Create, view, update, and delete purchase orders linked to suppliers.
 - **Order Items**: Each order includes one or more items, connected to products.
-- **Inventory Movements**: Manually register `IN` (incoming) or `OUT` (outgoing) stock operations.
+- **Inventory Movements**: Manually register `IN` (incoming) stock operations.
 - **Stock Updates**: Stock levels are automatically updated when a movement is created.
 - **Date-based Queries**: Retrieve orders or movements between date ranges.
 - **User Authentication**: Register users with different roles: `EMPLOYEE` or `ADMIN`.
@@ -92,6 +92,21 @@ Set variables in .vscode/launch.json or your environment before running the app.
 
 - [Frontend Client - React App](https://github.com/Sebaspallero/inventory-managment-front).
 
+## 📖 OpenAPI Documentation
+
+This project uses OpenAPI 2.8.6 and Swagger UI to provide interactive documentation for the REST API.
+
+Once the application is running, you can access the Swagger UI at:
+
+```bash
+http://localhost:8080/swagger-ui/index.html
+```
+
+### 🔍 Available Documentation Endpoints
+
+- Swagger UI: ```GET /swagger-ui/index.html```
+- OpenAPI JSON: ```GET /v3/api-docs```
+- OpenAPI YAML: ```GET /v3/api-docs.yaml```
 
 
 ## 📫 Contact
