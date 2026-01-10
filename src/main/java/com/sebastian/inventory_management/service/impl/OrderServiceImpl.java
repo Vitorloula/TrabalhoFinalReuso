@@ -30,6 +30,7 @@ import com.sebastian.inventory_management.event.Order.OrderEvent;
 import com.sebastian.inventory_management.exception.ResourceNotFoundException;
 import com.sebastian.inventory_management.mapper.OrderItemMapper;
 import com.sebastian.inventory_management.mapper.OrderMapper;
+import com.sebastian.inventory_management.mapper.PageMapperUtil;
 import com.sebastian.inventory_management.model.InventoryMovement;
 import com.sebastian.inventory_management.model.Order;
 import com.sebastian.inventory_management.model.OrderItem;
@@ -132,7 +133,7 @@ public class OrderServiceImpl implements IOrderService {
     @Transactional(readOnly = true)
     public Page<OrderResponseDTO> getAllOrdersPageable(Pageable pageable) {
         Page<Order> orders = orderRepository.findAll(pageable);
-        return orderMapper.toDTOPage(orders);
+        return PageMapperUtil.toPage(orders, orderMapper::toDTO);
     }
 
     @Override
@@ -152,8 +153,8 @@ public class OrderServiceImpl implements IOrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public OrderCountByMonthDTO countOrdersByMonth() {
-       return orderRepository.countOrdersByMonth();
+    public List<Object[]> countOrdersByMonth() {
+        return orderRepository.countOrdersByMonthRaw();
     }
 
     @Override
@@ -230,10 +231,11 @@ public class OrderServiceImpl implements IOrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<OrderResponseDTO> searchOrders(String orderNumber, Long supplierId, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+    public Page<OrderResponseDTO> searchOrders(String orderNumber, Long supplierId, LocalDate startDate,
+            LocalDate endDate, Pageable pageable) {
         Specification<Order> spec = OrderSpecification.withFilters(orderNumber, supplierId, startDate, endDate);
         Page<Order> ordersPage = orderRepository.findAll(spec, pageable);
-        return orderMapper.toDTOPage(ordersPage);
+        return PageMapperUtil.toPage(ordersPage, orderMapper::toDTO);
     }
 
     @Override
@@ -242,23 +244,21 @@ public class OrderServiceImpl implements IOrderService {
         LocalDateTime today = LocalDateTime.now();
         LocalDateTime startDate = today.minusMonths(months - 1).withDayOfMonth(1);
 
-    List<Object[]> results = orderRepository.countOrdersGroupedByMonth(startDate, today);
+        List<Object[]> results = orderRepository.countOrdersGroupedByMonth(startDate, today);
 
-    Map<YearMonth, Long> counts = results.stream()
-            .collect(Collectors.toMap(
-                    r -> YearMonth.of(((Number) r[0]).intValue(), ((Number) r[1]).intValue()),
-                    r -> (Long) r[2]
-            ));
+        Map<YearMonth, Long> counts = results.stream()
+                .collect(Collectors.toMap(
+                        r -> YearMonth.of(((Number) r[0]).intValue(), ((Number) r[1]).intValue()),
+                        r -> (Long) r[2]));
 
-    List<OrderMonthlyDTO> response = new ArrayList<>();
-    for (int i = 0; i < months; i++) {
-        YearMonth month = YearMonth.from(startDate.plusMonths(i));
-        response.add(new OrderMonthlyDTO(
-                month.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault()),
-                counts.getOrDefault(month, 0L)
-        ));
-    }
-    return response;
+        List<OrderMonthlyDTO> response = new ArrayList<>();
+        for (int i = 0; i < months; i++) {
+            YearMonth month = YearMonth.from(startDate.plusMonths(i));
+            response.add(new OrderMonthlyDTO(
+                    month.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault()),
+                    counts.getOrDefault(month, 0L)));
+        }
+        return response;
     }
 
 }

@@ -4,44 +4,37 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import com.sebastian.inventory_management.model.ActivityLog;
-import com.sebastian.inventory_management.model.Category;
+import com.sebastian.inventory_management.event.base.AbstractEventListener;
 import com.sebastian.inventory_management.service.IActivityLogService;
 
+/**
+ * Listener para eventos de Category.
+ * Utiliza Template Method herdado de AbstractEventListener.
+ */
 @Component
-public class CategoryEventListener {
-    
-    private IActivityLogService activityLogService;
+public class CategoryEventListener extends AbstractEventListener<CategoryEvent> {
 
     public CategoryEventListener(IActivityLogService activityLogService) {
-        this.activityLogService = activityLogService;
+        super(activityLogService);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleCategoryEvent(CategoryEvent event) {
-        Category category = event.getCategory();
-        if (category != null && category.getId() != null) {
-            ActivityLog log = new ActivityLog();
+        handleEvent(event);
+    }
 
-            switch (event.getActionType()) {
-                case CREATED:
-                    log.setType("CATEGORY_CREATED");
-                    log.setTitle("Nueva Categoría Creada");
-                    log.setDescription("Categoría #" + category.getId() + " con el nombre de  " + category.getName());
-                    break;
-                case UPDATED:
-                    log.setType("CATEGORY_UPDATED");
-                    log.setTitle("Categoría Actualizada");
-                    log.setDescription("Se actualizó la categoría #" + category.getId() + " con el nuevo nombre de  " + category.getName());
-                    break;
-                case DELETED:
-                    log.setType("CATEGORY_DELETED");
-                    log.setTitle("Categoría Eliminada");
-                    log.setDescription("Se eliminó la categoría #" + category.getId() + " con el nombre de  " + category.getName());
-                    break;
-            }
+    @Override
+    protected String getTitleCreated() {
+        return "Nueva Categoría Creada";
+    }
 
-            activityLogService.saveActivityLog(log);
-        }
+    @Override
+    protected String getTitleUpdated() {
+        return "Categoría Actualizada";
+    }
+
+    @Override
+    protected String getTitleDeleted() {
+        return "Categoría Eliminada";
     }
 }

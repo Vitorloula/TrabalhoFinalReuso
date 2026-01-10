@@ -15,20 +15,31 @@ import com.sebastian.inventory_management.model.Order;
 
 public interface IOrderService {
     OrderResponseDTO createOrder(OrderRequestDTO orderDTO);
+
     OrderResponseDTO getOrderById(Long id);
+
     OrderResponseDTO getOrderByOrderNumber(String orderNumber);
 
-    Page<OrderResponseDTO> searchOrders( String orderNumber, Long supplierId, LocalDate startDate, LocalDate endDate, Pageable pageable);
-
+    Page<OrderResponseDTO> searchOrders(String orderNumber, Long supplierId, LocalDate startDate, LocalDate endDate,
+            Pageable pageable);
 
     List<OrderResponseDTO> getAllOrders();
+
     Page<OrderResponseDTO> getAllOrdersPageable(Pageable pageable);
+
     List<OrderResponseDTO> getOrdersBySupplier(Long supplierId);
+
     List<OrderResponseDTO> getOrdersBetweenDates(LocalDateTime startDate, LocalDateTime endDate);
+
     OrderResponseDTO updateOrder(Long id, OrderRequestDTO orderDTO);
-    OrderCountByMonthDTO countOrdersByMonth();
+
+    List<Object[]> countOrdersByMonth();
+
     List<OrderResponseDTO> findRecentOrders();
+
     List<OrderMonthlyDTO> getOrderCountLastMonths(int months);
+
     void deleteOrder(Long id);
+
     Order getOrderByIdEntity(Long id);
 }

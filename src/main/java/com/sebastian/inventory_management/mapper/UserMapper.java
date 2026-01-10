@@ -5,8 +5,6 @@ import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 
 import com.sebastian.inventory_management.DTO.User.UserUpdateRequestDTO;
 import com.sebastian.inventory_management.DTO.User.UserResponseDTO;
@@ -26,11 +24,6 @@ public interface UserMapper {
     UserResponseDTO toDTO(User user);
 
     List<UserResponseDTO> toDTOList(List<User> users);
-
-    default Page<UserResponseDTO> toDTOPage(Page<User> page) {
-        List<UserResponseDTO> dtoList = toDTOList(page.getContent());
-        return new PageImpl<>(dtoList, page.getPageable(), page.getTotalElements());
-    }
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "movements", ignore = true)

@@ -5,8 +5,6 @@ import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 
 import com.sebastian.inventory_management.DTO.Product.ProductRequestDTO;
 import com.sebastian.inventory_management.DTO.Product.ProductResponseDTO;
@@ -30,11 +28,6 @@ public interface ProductMapper {
     ProductResponseDTO toDTO(Product product);
 
     List<ProductResponseDTO> toDTOList(List<Product> products);
-
-    default Page<ProductResponseDTO> toDTOPage(Page<Product> page) {
-        List<ProductResponseDTO> dtoList = toDTOList(page.getContent());
-        return new PageImpl<>(dtoList, page.getPageable(), page.getTotalElements());
-    }
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", ignore = true)

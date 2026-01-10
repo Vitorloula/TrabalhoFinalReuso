@@ -19,6 +19,7 @@ import com.sebastian.inventory_management.DTO.User.UserResponseDTO;
 import com.sebastian.inventory_management.DTO.User.UserStatsResponseDTO;
 import com.sebastian.inventory_management.enums.Role;
 import com.sebastian.inventory_management.exception.ResourceNotFoundException;
+import com.sebastian.inventory_management.mapper.PageMapperUtil;
 import com.sebastian.inventory_management.mapper.UserMapper;
 import com.sebastian.inventory_management.model.User;
 import com.sebastian.inventory_management.repository.UserRepository;
@@ -87,7 +88,7 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
     @Transactional(readOnly = true)
     public Page<UserResponseDTO> getAllUsersPaginated(Pageable pageable) {
         Page<User> users = userRepository.findAll(pageable);
-        return userMapper.toDTOPage(users);
+        return PageMapperUtil.toPage(users, userMapper::toDTO);
     }
 
     @Override
@@ -106,8 +107,7 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
-        );
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
     }
 
     @Override
@@ -125,31 +125,31 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
         long totalAdmins = 0;
         long totalEmployees = 0;
         long newUsers = 0;
-    
+
         try {
             totalUsers = userRepository.count();
         } catch (Exception e) {
             totalUsers = 0;
         }
-    
+
         try {
             totalAdmins = userRepository.countByRole(Role.ADMIN);
         } catch (Exception e) {
-            totalAdmins = 0; 
+            totalAdmins = 0;
         }
-    
+
         try {
             totalEmployees = userRepository.countByRole(Role.EMPLOYEE);
         } catch (Exception e) {
             totalEmployees = 0;
         }
-    
+
         try {
             newUsers = userRepository.countNewUsersInLast30Days(LocalDateTime.now().minusDays(30));
         } catch (Exception e) {
             newUsers = 0;
         }
-    
+
         return new UserStatsResponseDTO(totalUsers, totalAdmins, totalEmployees, newUsers);
     }
 
@@ -157,10 +157,7 @@ public class UserServiceImpl implements IUserService, UserDetailsService {
     @Transactional(readOnly = true)
     public Page<UserResponseDTO> findByNameContainingIgnoreCase(String name, Pageable pageable) {
         Page<User> users = userRepository.findByNameContainingIgnoreCase(name, pageable);
-        return userMapper.toDTOPage(users);
+        return PageMapperUtil.toPage(users, userMapper::toDTO);
     }
-    
 
-
-    
 }

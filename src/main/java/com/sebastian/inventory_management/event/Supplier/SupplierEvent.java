@@ -1,15 +1,31 @@
 package com.sebastian.inventory_management.event.Supplier;
 
 import com.sebastian.inventory_management.enums.ActionType;
+import com.sebastian.inventory_management.event.base.BaseEvent;
 import com.sebastian.inventory_management.model.Supplier;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+/**
+ * Evento de domínio para Supplier.
+ * Estende BaseEvent utilizando Generics para reutilização de código.
+ */
+public class SupplierEvent extends BaseEvent<Supplier> {
 
-@AllArgsConstructor
-@Data
-public class SupplierEvent {
-    
-    private final Supplier supplier;
-    private final ActionType actionType;
+    public SupplierEvent(Supplier supplier, ActionType actionType) {
+        super(supplier, actionType);
+    }
+
+    @Override
+    public Long getEntityId() {
+        return getEntity().getId();
+    }
+
+    @Override
+    public String getEntityDescription() {
+        return "Proveedor #" + getEntityId() + " - " + getEntity().getName();
+    }
+
+    @Override
+    public String getEntityTypePrefix() {
+        return "SUPPLIER";
+    }
 }

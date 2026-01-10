@@ -1,51 +1,40 @@
 package com.sebastian.inventory_management.event.Supplier;
 
-
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import com.sebastian.inventory_management.model.ActivityLog;
-import com.sebastian.inventory_management.model.Supplier;
+import com.sebastian.inventory_management.event.base.AbstractEventListener;
 import com.sebastian.inventory_management.service.IActivityLogService;
 
+/**
+ * Listener para eventos de Supplier.
+ * Utiliza Template Method herdado de AbstractEventListener.
+ */
 @Component
-public class SupplierEventListener {
+public class SupplierEventListener extends AbstractEventListener<SupplierEvent> {
 
-    private IActivityLogService activityLogService;
-
-    @Autowired
     public SupplierEventListener(IActivityLogService activityLogService) {
-        this.activityLogService = activityLogService;
+        super(activityLogService);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleSupplierEvent(SupplierEvent event) {
-        Supplier supplier = event.getSupplier();
-        if (supplier != null && supplier.getId() != null) {
-            ActivityLog log = new ActivityLog();
+        handleEvent(event);
+    }
 
-            switch (event.getActionType()) {
-                case CREATED:
-                    log.setType("SUPPLIER_CREATED");
-                    log.setTitle("Nuevo Proveedor Creado");
-                    log.setDescription("Proveedor #" + supplier.getId() + " con el nombre de  " + supplier.getName());
-                    break;
-                case UPDATED:
-                    log.setType("SUPPLIER_UPDATED");
-                    log.setTitle("Proveedor Actualizado");
-                    log.setDescription("Se actualizó el proveedor #" + supplier.getId() + " con el nuevo nombre de  " + supplier.getName());
-                    break;
-                case DELETED:
-                    log.setType("SUPPLIER_DELETED");
-                    log.setTitle("Proveedor Eliminado");
-                    log.setDescription("Se eliminó el proveedor #" + supplier.getId() + " con el nombre de  " + supplier.getName());
-                    break;
-            }
+    @Override
+    protected String getTitleCreated() {
+        return "Nuevo Proveedor Creado";
+    }
 
-            activityLogService.saveActivityLog(log);
-        }
+    @Override
+    protected String getTitleUpdated() {
+        return "Proveedor Actualizado";
+    }
+
+    @Override
+    protected String getTitleDeleted() {
+        return "Proveedor Eliminado";
     }
 }

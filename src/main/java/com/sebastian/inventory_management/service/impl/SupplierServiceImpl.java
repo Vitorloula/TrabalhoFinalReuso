@@ -1,6 +1,5 @@
 package com.sebastian.inventory_management.service.impl;
 
-
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,20 +14,22 @@ import com.sebastian.inventory_management.DTO.Supplier.SupplierResponseDTO;
 import com.sebastian.inventory_management.enums.ActionType;
 import com.sebastian.inventory_management.event.Supplier.SupplierEvent;
 import com.sebastian.inventory_management.exception.ResourceNotFoundException;
+import com.sebastian.inventory_management.mapper.PageMapperUtil;
 import com.sebastian.inventory_management.mapper.SupplierMapper;
 import com.sebastian.inventory_management.model.Supplier;
 import com.sebastian.inventory_management.repository.SupplierRepository;
 import com.sebastian.inventory_management.service.ISupplierService;
 
 @Service
-public class SupplierServiceImpl implements ISupplierService{
+public class SupplierServiceImpl implements ISupplierService {
 
     private final SupplierRepository supplierRepository;
     private final SupplierMapper supplierMapper;
     private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    public SupplierServiceImpl(SupplierRepository supplierRepository, SupplierMapper supplierMapper, ApplicationEventPublisher eventPublisher) {
+    public SupplierServiceImpl(SupplierRepository supplierRepository, SupplierMapper supplierMapper,
+            ApplicationEventPublisher eventPublisher) {
         this.eventPublisher = eventPublisher;
         this.supplierRepository = supplierRepository;
         this.supplierMapper = supplierMapper;
@@ -48,22 +49,22 @@ public class SupplierServiceImpl implements ISupplierService{
     @Transactional(readOnly = true)
     public SupplierResponseDTO getSupplierById(Long id) {
         Supplier supplier = supplierRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + id));
         return supplierMapper.toDTO(supplier);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page <SupplierResponseDTO> findByNameContainingIgnoreCase(String name, Pageable pageable) {
+    public Page<SupplierResponseDTO> findByNameContainingIgnoreCase(String name, Pageable pageable) {
         Page<Supplier> suppliers = supplierRepository.findByNameContainingIgnoreCase(name, pageable);
-        return supplierMapper.toDTOPage(suppliers);
+        return PageMapperUtil.toPage(suppliers, supplierMapper::toDTO);
     }
 
     @Override
     @Transactional(readOnly = true)
     public SupplierResponseDTO getSupplierByExactName(String name) {
         Supplier supplier = supplierRepository.findByName(name)
-            .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with name: " + name));
+                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with name: " + name));
         return supplierMapper.toDTO(supplier);
     }
 
@@ -71,7 +72,8 @@ public class SupplierServiceImpl implements ISupplierService{
     @Transactional(readOnly = true)
     public SupplierResponseDTO getSupplierByContactEmail(String contactEmail) {
         Supplier supplier = supplierRepository.findByContactEmail(contactEmail)
-            .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with contact email: " + contactEmail));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Supplier not found with contact email: " + contactEmail));
         return supplierMapper.toDTO(supplier);
     }
 
@@ -86,7 +88,7 @@ public class SupplierServiceImpl implements ISupplierService{
     @Transactional(readOnly = true)
     public Page<SupplierResponseDTO> getAllSuppliersPaginated(Pageable pageable) {
         Page<Supplier> suppliers = supplierRepository.findAll(pageable);
-        return supplierMapper.toDTOPage(suppliers);
+        return PageMapperUtil.toPage(suppliers, supplierMapper::toDTO);
     }
 
     @Override
@@ -124,7 +126,7 @@ public class SupplierServiceImpl implements ISupplierService{
     @Transactional(readOnly = true)
     public Supplier getSupplierByIdEntity(Long id) {
         return supplierRepository.findById(id)
-        .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + id));
     }
 
     private void validateUniqueSupplier(String name, String contactEmail, Long excludeId) {
@@ -133,17 +135,13 @@ public class SupplierServiceImpl implements ISupplierService{
                 throw new IllegalArgumentException("Supplier with name '" + name + "' already exists.");
             }
         });
-    
+
         supplierRepository.findByContactEmail(contactEmail).ifPresent(existing -> {
             if (excludeId == null || !existing.getId().equals(excludeId)) {
-                throw new IllegalArgumentException("Supplier with contact email '" + contactEmail + "' already exists.");
+                throw new IllegalArgumentException(
+                        "Supplier with contact email '" + contactEmail + "' already exists.");
             }
         });
     }
 
-   
-
-  
-
-    
 }

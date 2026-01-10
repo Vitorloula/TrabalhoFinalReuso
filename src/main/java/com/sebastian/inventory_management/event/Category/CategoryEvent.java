@@ -1,17 +1,31 @@
 package com.sebastian.inventory_management.event.Category;
 
 import com.sebastian.inventory_management.enums.ActionType;
+import com.sebastian.inventory_management.event.base.BaseEvent;
 import com.sebastian.inventory_management.model.Category;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+/**
+ * Evento de domínio para Category.
+ * Estende BaseEvent utilizando Generics para reutilização de código.
+ */
+public class CategoryEvent extends BaseEvent<Category> {
 
-@AllArgsConstructor
-@Data
-public class CategoryEvent {
-    
-    private final Category category;
-    private final ActionType actionType;
+    public CategoryEvent(Category category, ActionType actionType) {
+        super(category, actionType);
+    }
 
+    @Override
+    public Long getEntityId() {
+        return getEntity().getId();
+    }
+
+    @Override
+    public String getEntityDescription() {
+        return "Categoría #" + getEntityId() + " - " + getEntity().getName();
+    }
+
+    @Override
+    public String getEntityTypePrefix() {
+        return "CATEGORY";
+    }
 }
-

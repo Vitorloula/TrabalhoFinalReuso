@@ -14,6 +14,7 @@ import com.sebastian.inventory_management.DTO.Product.ProductResponseDTO;
 import com.sebastian.inventory_management.enums.ActionType;
 import com.sebastian.inventory_management.event.Product.ProductEvent;
 import com.sebastian.inventory_management.exception.ResourceNotFoundException;
+import com.sebastian.inventory_management.mapper.PageMapperUtil;
 import com.sebastian.inventory_management.mapper.ProductMapper;
 import com.sebastian.inventory_management.model.Category;
 import com.sebastian.inventory_management.model.Product;
@@ -85,10 +86,9 @@ public class ProductServiceImpl implements IProductService {
     @Override
     @Transactional(readOnly = true)
     public Page<ProductResponseDTO> getAllProductsPaginated(Pageable pageable) {
-       Page <Product> products = productRepository.findAll(pageable);
-       return productMapper.toDTOPage(products);
+        Page<Product> products = productRepository.findAll(pageable);
+        return PageMapperUtil.toPage(products, productMapper::toDTO);
     }
-
 
     @Override
     @Transactional(readOnly = true)
@@ -98,7 +98,7 @@ public class ProductServiceImpl implements IProductService {
         }
 
         Page<Product> products = productRepository.findByCategoryId(categoryId, pageable);
-        return productMapper.toDTOPage(products);
+        return PageMapperUtil.toPage(products, productMapper::toDTO);
     }
 
     @Override
@@ -127,7 +127,7 @@ public class ProductServiceImpl implements IProductService {
     @Transactional(readOnly = true)
     public Page<ProductResponseDTO> findByNameContainingIgnoreCase(String name, Pageable pageable) {
         Page<Product> products = productRepository.findByNameContainingIgnoreCase(name, pageable);
-        return productMapper.toDTOPage(products);
+        return PageMapperUtil.toPage(products, productMapper::toDTO);
     }
 
     @Override
@@ -202,7 +202,4 @@ public class ProductServiceImpl implements IProductService {
         });
     }
 
-   
-
-   
 }

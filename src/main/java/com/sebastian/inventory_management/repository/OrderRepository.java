@@ -25,14 +25,11 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
         List<Order> findByOrderDateBetween(@Param("startDate") LocalDateTime startDate,
                         @Param("endDate") LocalDateTime endDate);
 
-        @Query("SELECT new com.sebastian.inventory_management.DTO.Order.OrderCountByMonthDTO(" +
-                        "COUNT(o.id), " +
-                        "DATE(CONCAT(CAST(YEAR(MIN(o.orderDate)) AS string), '-', LPAD(CAST(MONTH(MIN(o.orderDate)) AS string), 2, '0'), '-01'))) "
-                        +
+        @Query("SELECT COUNT(o.id), YEAR(o.orderDate), MONTH(o.orderDate) " +
                         "FROM Order o " +
                         "GROUP BY YEAR(o.orderDate), MONTH(o.orderDate) " +
                         "ORDER BY YEAR(o.orderDate), MONTH(o.orderDate)")
-        OrderCountByMonthDTO countOrdersByMonth();
+        List<Object[]> countOrdersByMonthRaw();
 
         @Query("SELECT new com.sebastian.inventory_management.DTO.Order.OrderResponseDTO(o.id, o.orderNumber, o.orderDate, s.id, s.name) "
                         +
@@ -40,15 +37,16 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
         List<OrderResponseDTO> findRecentOrders();
 
         @Query("""
-                SELECT
-                YEAR(o.orderDate) as year,
-                MONTH(o.orderDate) as month,
-                COUNT(o) as count
-                FROM Order o
-                WHERE o.orderDate BETWEEN :startDate AND :endDate
-                GROUP BY YEAR(o.orderDate), MONTH(o.orderDate)
-                ORDER BY YEAR(o.orderDate), MONTH(o.orderDate)
-                """)
-        List<Object[]> countOrdersGroupedByMonth(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+                        SELECT
+                        YEAR(o.orderDate) as year,
+                        MONTH(o.orderDate) as month,
+                        COUNT(o) as count
+                        FROM Order o
+                        WHERE o.orderDate BETWEEN :startDate AND :endDate
+                        GROUP BY YEAR(o.orderDate), MONTH(o.orderDate)
+                        ORDER BY YEAR(o.orderDate), MONTH(o.orderDate)
+                        """)
+        List<Object[]> countOrdersGroupedByMonth(@Param("startDate") LocalDateTime startDate,
+                        @Param("endDate") LocalDateTime endDate);
 
 }

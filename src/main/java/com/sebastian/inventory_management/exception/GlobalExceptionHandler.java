@@ -2,9 +2,6 @@ package com.sebastian.inventory_management.exception;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,90 +11,65 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+/**
+ * Handler global de exceções para a API REST.
+ * Utiliza ErrorResponse e método utilitário para eliminar duplicação de código.
+ * 
+ * Padrão aplicado: Extract Class (ErrorResponse) + Factory Method
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Object> handleResourceNotFound(ResourceNotFoundException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
+    // ==================== Método Utilitário ====================
 
-        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    /**
+     * Constrói ResponseEntity com ErrorResponse padronizado.
+     * Elimina duplicação de código nos handlers.
+     */
+    private ResponseEntity<ErrorResponse> buildResponse(HttpStatus status, String error, String message) {
+        return ResponseEntity.status(status)
+                .body(ErrorResponse.of(status, error, message));
+    }
+
+    // ==================== Exception Handlers ====================
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Object> handleIllegalArgument(IllegalArgumentException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Bad Request");
-        body.put("message", ex.getMessage());
-
-        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage());
     }
 
     @ExceptionHandler(InstantiationException.class)
-    public ResponseEntity<Object> InstantiationException(InstantiationException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Bad Request");
-        body.put("message", ex.getMessage());
-
-        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    public ResponseEntity<ErrorResponse> handleInstantiationException(InstantiationException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage());
     }
 
     @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<Object> UsernameNotFoundException(UsernameNotFoundException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.NOT_FOUND.value());
-        body.put("error", "Not Found");
-        body.put("message", ex.getMessage());
-
-        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    public ResponseEntity<ErrorResponse> handleUsernameNotFound(UsernameNotFoundException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage());
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.FORBIDDEN.value());
-        body.put("error", "Forbidden");
-        body.put("message", "No tenés permiso para acceder a este recurso.");
-        return new ResponseEntity<>(body, HttpStatus.FORBIDDEN);
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
+        return buildResponse(HttpStatus.FORBIDDEN, "Forbidden", "No tenés permiso para acceder a este recurso.");
     }
 
     @ExceptionHandler(AuthenticationCredentialsNotFoundException.class)
-    public ResponseEntity<Object> handleAuthException(AuthenticationCredentialsNotFoundException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.UNAUTHORIZED.value());
-        body.put("error", "Unauthorized");
-        body.put("message", "Tenés que estar autenticado para acceder.");
-        return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
+    public ResponseEntity<ErrorResponse> handleAuthCredentialsNotFound(AuthenticationCredentialsNotFoundException ex) {
+        return buildResponse(HttpStatus.UNAUTHORIZED, "Unauthorized", "Tenés que estar autenticado para acceder.");
     }
 
     @ExceptionHandler(IOException.class)
-    public ResponseEntity<Object> handleAuthException(IOException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        body.put("error", "Server Error");
-        body.put("message", "Error de servidor.");
-        return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
+    public ResponseEntity<ErrorResponse> handleIOException(IOException ex) {
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error", "Error de servidor.");
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<Object> handleBadCredentialsException(BadCredentialsException ex) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", HttpStatus.UNAUTHORIZED.value());
-        body.put("error", "Unauthorized");
-        body.put("message", ex.getMessage());
-        return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
+    public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
+        return buildResponse(HttpStatus.UNAUTHORIZED, "Unauthorized", ex.getMessage());
     }
 }

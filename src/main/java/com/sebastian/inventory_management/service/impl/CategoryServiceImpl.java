@@ -15,19 +15,21 @@ import com.sebastian.inventory_management.enums.ActionType;
 import com.sebastian.inventory_management.event.Category.CategoryEvent;
 import com.sebastian.inventory_management.exception.ResourceNotFoundException;
 import com.sebastian.inventory_management.mapper.CategoryMapper;
+import com.sebastian.inventory_management.mapper.PageMapperUtil;
 import com.sebastian.inventory_management.model.Category;
 import com.sebastian.inventory_management.repository.CategoryRepository;
 import com.sebastian.inventory_management.service.ICategoryService;
 
 @Service
-public class CategoryServiceImpl implements ICategoryService   {
+public class CategoryServiceImpl implements ICategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
     private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    public CategoryServiceImpl(CategoryRepository categoryRepository, CategoryMapper categoryMapper, ApplicationEventPublisher eventPublisher) {
+    public CategoryServiceImpl(CategoryRepository categoryRepository, CategoryMapper categoryMapper,
+            ApplicationEventPublisher eventPublisher) {
         this.eventPublisher = eventPublisher;
         this.categoryRepository = categoryRepository;
         this.categoryMapper = categoryMapper;
@@ -46,8 +48,8 @@ public class CategoryServiceImpl implements ICategoryService   {
     @Override
     @Transactional(readOnly = true)
     public CategoryResponseDTO getCategoryById(Long id) {
-          Category category = categoryRepository.findById(id)
-                        .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
         return categoryMapper.toDTO(category);
     }
 
@@ -55,7 +57,7 @@ public class CategoryServiceImpl implements ICategoryService   {
     @Transactional(readOnly = true)
     public CategoryResponseDTO getCategoryByName(String name) {
         Category category = categoryRepository.findByName(name)
-                        .orElseThrow(() -> new ResourceNotFoundException("Category not found with name: " + name));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with name: " + name));
         return categoryMapper.toDTO(category);
     }
 
@@ -89,14 +91,14 @@ public class CategoryServiceImpl implements ICategoryService   {
     @Transactional(readOnly = true)
     public boolean existsById(Long id) {
         return categoryRepository.existsById(id);
-                        
+
     }
 
     @Override
     @Transactional(readOnly = true)
     public Category getCategoryByIdEntity(Long id) {
         return categoryRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
     }
 
     private void validateUniqueCategoryName(String name, Long excludeId) {
@@ -111,13 +113,13 @@ public class CategoryServiceImpl implements ICategoryService   {
     @Transactional(readOnly = true)
     public Page<CategoryResponseDTO> getAllPageableCategories(Pageable pageable) {
         Page<Category> categories = categoryRepository.findAll(pageable);
-        return categoryMapper.toDTOPage(categories);
+        return PageMapperUtil.toPage(categories, categoryMapper::toDTO);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<CategoryResponseDTO> findByNameContainingIgnoreCase(String name, Pageable pageable) {
         Page<Category> categories = categoryRepository.findByNameContainingIgnoreCase(name, pageable);
-        return categoryMapper.toDTOPage(categories);
+        return PageMapperUtil.toPage(categories, categoryMapper::toDTO);
     }
 }

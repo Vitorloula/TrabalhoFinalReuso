@@ -5,8 +5,6 @@ import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 
 import com.sebastian.inventory_management.DTO.Order.OrderRequestDTO;
 import com.sebastian.inventory_management.DTO.Order.OrderResponseDTO;
@@ -28,11 +26,6 @@ public interface OrderMapper {
     OrderResponseDTO toDTO(Order order);
 
     List<OrderResponseDTO> toDTOList(List<Order> orders);
-
-    default Page<OrderResponseDTO> toDTOPage(Page<Order> order) {
-        List<OrderResponseDTO> dtoList = toDTOList(order.getContent());
-        return new PageImpl<>(dtoList, order.getPageable(), order.getTotalElements());
-    }
 
     @Mapping(target = "id", ignore = true)
     @Mapping(source = "supplierId", target = "supplier.id")
