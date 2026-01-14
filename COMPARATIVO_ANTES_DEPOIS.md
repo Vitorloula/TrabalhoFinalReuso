@@ -635,13 +635,5 @@ public class CategoryServiceImpl extends AbstractCrudService<
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 🎯 Próximos Passos (Recomendados)
-
-1. Aplicar **Inversão de Dependência** para reduzir CBO
-2. Dividir classes com alto LCOM em classes menores
-3. Criar mais interfaces para aumentar testabilidade
-
----
-
 **Relatório gerado em:** 2026-01-11  
 **Ferramentas:** CK Metrics 0.7.0, PMD, CPD, SonarCloud
