@@ -100,6 +100,12 @@ public class ProductServiceImpl extends AbstractCrudService<
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Product getProductByIdEntity(Long id) {
+        return getByIdEntity(id);
+    }
+
+    @Override
     public List<ProductResponseDTO> getAllProducts() {
         return getAll();
     }

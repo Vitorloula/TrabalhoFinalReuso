@@ -22,13 +22,9 @@ import com.sebastian.inventory_management.service.ICategoryService;
 import com.sebastian.inventory_management.service.base.AbstractCrudService;
 
 @Service
-public class CategoryServiceImpl extends AbstractCrudService<
-        Category,
-        CategoryResponseDTO,
-        CategoryRequestDTO,
-        Long,
-        CategoryRepository,
-        CategoryMapper> implements ICategoryService {
+public class CategoryServiceImpl extends
+        AbstractCrudService<Category, CategoryResponseDTO, CategoryRequestDTO, Long, CategoryRepository, CategoryMapper>
+        implements ICategoryService {
 
     @Autowired
     public CategoryServiceImpl(CategoryRepository categoryRepository, CategoryMapper categoryMapper,
@@ -79,6 +75,12 @@ public class CategoryServiceImpl extends AbstractCrudService<
     @Override
     public CategoryResponseDTO getCategoryById(Long id) {
         return getById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Category getCategoryByIdEntity(Long id) {
+        return getByIdEntity(id);
     }
 
     @Override

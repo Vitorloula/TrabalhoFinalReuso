@@ -23,10 +23,7 @@ import com.sebastian.inventory_management.service.IUserService;
 
 @RestController
 @RequestMapping("/api/users")
-public class UserController extends AbstractCrudController<
-        UserResponseDTO,
-        UserUpdateRequestDTO,
-        Long> {
+public class UserController extends AbstractCrudController<UserResponseDTO, UserUpdateRequestDTO, Long> {
 
     private final IUserService userService;
 

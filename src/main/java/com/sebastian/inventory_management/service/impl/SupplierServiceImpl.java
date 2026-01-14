@@ -82,6 +82,12 @@ public class SupplierServiceImpl extends AbstractCrudService<
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Supplier getSupplierByIdEntity(Long id) {
+        return getByIdEntity(id);
+    }
+
+    @Override
     public List<SupplierResponseDTO> getAllSuppliers() {
         return getAll();
     }
