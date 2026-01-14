@@ -5,94 +5,90 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sebastian.inventory_management.controller.base.AbstractCrudController;
+import com.sebastian.inventory_management.controller.base.CrudService;
+import com.sebastian.inventory_management.controller.util.ResponseBuilder;
 import com.sebastian.inventory_management.DTO.Supplier.SupplierRequestDTO;
 import com.sebastian.inventory_management.DTO.Supplier.SupplierResponseDTO;
 import com.sebastian.inventory_management.service.ISupplierService;
 
 @RestController
 @RequestMapping("/api/suppliers")
-public class SupplierController {
-    
-    private ISupplierService supplierService;
+public class SupplierController extends AbstractCrudController<
+        SupplierResponseDTO,
+        SupplierRequestDTO,
+        Long> {
+
+    private final ISupplierService supplierService;
 
     @Autowired
     public SupplierController(ISupplierService supplierService) {
         this.supplierService = supplierService;
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @PostMapping
-    public ResponseEntity<SupplierResponseDTO> createSupplier(@RequestBody SupplierRequestDTO supplierRequest) {
-        SupplierResponseDTO createdSupplier = supplierService.saveSupplier(supplierRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdSupplier);
-    }
+    @Override
+    protected CrudService<SupplierResponseDTO, SupplierRequestDTO, Long> getService() {
+        return new CrudService<SupplierResponseDTO, SupplierRequestDTO, Long>() {
+            @Override
+            public SupplierResponseDTO getById(Long id) {
+                return supplierService.getSupplierById(id);
+            }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
-    @GetMapping("/{id}")
-    public ResponseEntity<SupplierResponseDTO> getSupplierById(@PathVariable Long id){
-        SupplierResponseDTO supplier = supplierService.getSupplierById(id);
-        return ResponseEntity.status(HttpStatus.OK).body(supplier);
+            @Override
+            public List<SupplierResponseDTO> getAll() {
+                return supplierService.getAllSuppliers();
+            }
+
+            @Override
+            public Page<SupplierResponseDTO> getAllPaginated(Pageable pageable) {
+                return supplierService.getAllSuppliersPaginated(pageable);
+            }
+
+            @Override
+            public SupplierResponseDTO save(SupplierRequestDTO request) {
+                return supplierService.saveSupplier(request);
+            }
+
+            @Override
+            public SupplierResponseDTO update(Long id, SupplierRequestDTO request) {
+                return supplierService.updateSupplier(id, request);
+            }
+
+            @Override
+            public void delete(Long id) {
+                supplierService.deleteSupplier(id);
+            }
+        };
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     @GetMapping("/search")
-    public ResponseEntity<Page<SupplierResponseDTO>> searchSuppliersByName(@RequestParam String name, Pageable pageable){
-        Page <SupplierResponseDTO> supplier = supplierService.findByNameContainingIgnoreCase(name, pageable);
-        return ResponseEntity.status(HttpStatus.OK).body(supplier);
+    public ResponseEntity<Page<SupplierResponseDTO>> searchSuppliersByName(
+            @RequestParam String name,
+            Pageable pageable) {
+        Page<SupplierResponseDTO> suppliers = supplierService.findByNameContainingIgnoreCase(name, pageable);
+        return ResponseBuilder.ok(suppliers);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     @GetMapping("/contact-email/{contactEmail}")
-    public ResponseEntity<SupplierResponseDTO> getSupplierByContactEmail(@PathVariable String contactEmail){
+    public ResponseEntity<SupplierResponseDTO> getSupplierByContactEmail(@PathVariable String contactEmail) {
         SupplierResponseDTO supplier = supplierService.getSupplierByContactEmail(contactEmail);
-        return ResponseEntity.status(HttpStatus.OK).body(supplier);
-    }
-
-    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
-    @GetMapping("/paginated")
-    public ResponseEntity<Page<SupplierResponseDTO>> getAllPaginatedSuppliers(Pageable pageable){
-        Page<SupplierResponseDTO> suppliers = supplierService.getAllSuppliersPaginated(pageable);
-        return ResponseEntity.status(HttpStatus.OK).body(suppliers);
-    }
-
-    @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
-    @GetMapping
-    public ResponseEntity<List<SupplierResponseDTO>> getAllSuppliers(){
-        List<SupplierResponseDTO> suppliers = supplierService.getAllSuppliers();
-        return ResponseEntity.status(HttpStatus.OK).body(suppliers);
+        return ResponseBuilder.ok(supplier);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     @GetMapping("/count")
-    public ResponseEntity<Long> getCountSuppliers(){
-        Long suppliers = supplierService.countActiveSuppliers();
-        return ResponseEntity.status(HttpStatus.OK).body(suppliers);
-    }
-
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSupplier(@PathVariable Long id){
-        supplierService.deleteSupplier(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-    }
-
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @PutMapping("/{id}")
-    public ResponseEntity<SupplierResponseDTO> updateSupplier(@PathVariable Long id, @RequestBody SupplierRequestDTO supplierRequest) {
-        SupplierResponseDTO updatedSupplier = supplierService.updateSupplier(id, supplierRequest);
-        return ResponseEntity.status(HttpStatus.OK).body(updatedSupplier);
+    public ResponseEntity<Long> getCountSuppliers() {
+        Long count = supplierService.countActiveSuppliers();
+        return ResponseBuilder.ok(count);
     }
 }
