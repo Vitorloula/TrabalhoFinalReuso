@@ -13,135 +13,142 @@ import com.sebastian.inventory_management.DTO.Supplier.SupplierRequestDTO;
 import com.sebastian.inventory_management.DTO.Supplier.SupplierResponseDTO;
 import com.sebastian.inventory_management.enums.ActionType;
 import com.sebastian.inventory_management.event.Supplier.SupplierEvent;
-import com.sebastian.inventory_management.exception.ResourceNotFoundException;
+import com.sebastian.inventory_management.event.base.BaseEvent;
 import com.sebastian.inventory_management.mapper.PageMapperUtil;
 import com.sebastian.inventory_management.mapper.SupplierMapper;
 import com.sebastian.inventory_management.model.Supplier;
 import com.sebastian.inventory_management.repository.SupplierRepository;
 import com.sebastian.inventory_management.service.ISupplierService;
+import com.sebastian.inventory_management.service.base.AbstractCrudService;
 
 @Service
-public class SupplierServiceImpl implements ISupplierService {
-
-    private final SupplierRepository supplierRepository;
-    private final SupplierMapper supplierMapper;
-    private final ApplicationEventPublisher eventPublisher;
+public class SupplierServiceImpl extends AbstractCrudService<
+        Supplier,
+        SupplierResponseDTO,
+        SupplierRequestDTO,
+        Long,
+        SupplierRepository,
+        SupplierMapper> implements ISupplierService {
 
     @Autowired
     public SupplierServiceImpl(SupplierRepository supplierRepository, SupplierMapper supplierMapper,
             ApplicationEventPublisher eventPublisher) {
-        this.eventPublisher = eventPublisher;
-        this.supplierRepository = supplierRepository;
-        this.supplierMapper = supplierMapper;
+        super(supplierRepository, supplierMapper, eventPublisher);
     }
 
     @Override
-    @Transactional
+    protected String getEntityName() {
+        return "Supplier";
+    }
+
+    @Override
+    protected SupplierResponseDTO toDTO(Supplier entity) {
+        return mapper.toDTO(entity);
+    }
+
+    @Override
+    protected List<SupplierResponseDTO> toDTOList(List<Supplier> entities) {
+        return mapper.toDTOList(entities);
+    }
+
+    @Override
+    protected Supplier toEntity(SupplierRequestDTO request) {
+        return mapper.toEntity(request);
+    }
+
+    @Override
+    protected void updateEntityFromDto(SupplierRequestDTO request, Supplier entity) {
+        mapper.updateEntityFromDto(request, entity);
+    }
+
+    @Override
+    protected BaseEvent<?> createEvent(Supplier entity, ActionType actionType) {
+        return new SupplierEvent(entity, actionType);
+    }
+
+    @Override
+    protected void validateBeforeSave(SupplierRequestDTO request, Long excludeId) {
+        validateUniqueSupplier(request.getName(), request.getContactEmail(), excludeId);
+    }
+
+    @Override
     public SupplierResponseDTO saveSupplier(SupplierRequestDTO supplier) {
-        validateUniqueSupplier(supplier.getName(), supplier.getContactEmail(), null);
-        Supplier supplierToSave = supplierMapper.toEntity(supplier);
-        Supplier savedSupplier = supplierRepository.save(supplierToSave);
-        eventPublisher.publishEvent(new SupplierEvent(savedSupplier, ActionType.CREATED));
-        return supplierMapper.toDTO(savedSupplier);
+        return save(supplier);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public SupplierResponseDTO getSupplierById(Long id) {
-        Supplier supplier = supplierRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + id));
-        return supplierMapper.toDTO(supplier);
+        return getById(id);
+    }
+
+    @Override
+    public List<SupplierResponseDTO> getAllSuppliers() {
+        return getAll();
+    }
+
+    @Override
+    public Page<SupplierResponseDTO> getAllSuppliersPaginated(Pageable pageable) {
+        return getAllPaginated(pageable);
+    }
+
+    @Override
+    public SupplierResponseDTO updateSupplier(Long id, SupplierRequestDTO supplier) {
+        return update(id, supplier);
+    }
+
+    @Override
+    public void deleteSupplier(Long id) {
+        delete(id);
+    }
+
+    @Override
+    public boolean existsById(Long id) {
+        return repository.existsById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<SupplierResponseDTO> findByNameContainingIgnoreCase(String name, Pageable pageable) {
-        Page<Supplier> suppliers = supplierRepository.findByNameContainingIgnoreCase(name, pageable);
-        return PageMapperUtil.toPage(suppliers, supplierMapper::toDTO);
+        Page<Supplier> suppliers = repository.findByNameContainingIgnoreCase(name, pageable);
+        return PageMapperUtil.toPage(suppliers, mapper::toDTO);
     }
 
     @Override
     @Transactional(readOnly = true)
     public SupplierResponseDTO getSupplierByExactName(String name) {
-        Supplier supplier = supplierRepository.findByName(name)
-                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with name: " + name));
-        return supplierMapper.toDTO(supplier);
+        Supplier supplier = repository.findByName(name)
+                .orElseThrow(() -> new com.sebastian.inventory_management.exception.ResourceNotFoundException(
+                        "Supplier not found with name: " + name));
+        return mapper.toDTO(supplier);
     }
 
     @Override
     @Transactional(readOnly = true)
     public SupplierResponseDTO getSupplierByContactEmail(String contactEmail) {
-        Supplier supplier = supplierRepository.findByContactEmail(contactEmail)
-                .orElseThrow(
-                        () -> new ResourceNotFoundException("Supplier not found with contact email: " + contactEmail));
-        return supplierMapper.toDTO(supplier);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<SupplierResponseDTO> getAllSuppliers() {
-        List<Supplier> suppliers = supplierRepository.findAll();
-        return supplierMapper.toDTOList(suppliers);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<SupplierResponseDTO> getAllSuppliersPaginated(Pageable pageable) {
-        Page<Supplier> suppliers = supplierRepository.findAll(pageable);
-        return PageMapperUtil.toPage(suppliers, supplierMapper::toDTO);
+        Supplier supplier = repository.findByContactEmail(contactEmail)
+                .orElseThrow(() -> new com.sebastian.inventory_management.exception.ResourceNotFoundException(
+                        "Supplier not found with contact email: " + contactEmail));
+        return mapper.toDTO(supplier);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Long countActiveSuppliers() {
-        return supplierRepository.countActiveSuppliers();
-    }
-
-    @Override
-    @Transactional
-    public void deleteSupplier(Long id) {
-        Supplier supplier = getSupplierByIdEntity(id);
-        supplierRepository.delete(supplier);
-        eventPublisher.publishEvent(new SupplierEvent(supplier, ActionType.DELETED));
-    }
-
-    @Override
-    @Transactional
-    public SupplierResponseDTO updateSupplier(Long id, SupplierRequestDTO supplier) {
-        Supplier supplierToUpdate = getSupplierByIdEntity(id);
-        validateUniqueSupplier(supplier.getName(), supplier.getContactEmail(), id);
-        supplierMapper.updateEntityFromDto(supplier, supplierToUpdate);
-        supplierRepository.save(supplierToUpdate);
-        eventPublisher.publishEvent(new SupplierEvent(supplierToUpdate, ActionType.UPDATED));
-        return supplierMapper.toDTO(supplierToUpdate);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean existsById(Long id) {
-        return supplierRepository.existsById(id);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Supplier getSupplierByIdEntity(Long id) {
-        return supplierRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + id));
+        return repository.countActiveSuppliers();
     }
 
     private void validateUniqueSupplier(String name, String contactEmail, Long excludeId) {
-        supplierRepository.findByName(name).ifPresent(existing -> {
+        repository.findByName(name).ifPresent(existing -> {
             if (excludeId == null || !existing.getId().equals(excludeId)) {
                 throw new IllegalArgumentException("Supplier with name '" + name + "' already exists.");
             }
         });
 
-        supplierRepository.findByContactEmail(contactEmail).ifPresent(existing -> {
+        repository.findByContactEmail(contactEmail).ifPresent(existing -> {
             if (excludeId == null || !existing.getId().equals(excludeId)) {
                 throw new IllegalArgumentException(
                         "Supplier with contact email '" + contactEmail + "' already exists.");
             }
         });
     }
-
 }

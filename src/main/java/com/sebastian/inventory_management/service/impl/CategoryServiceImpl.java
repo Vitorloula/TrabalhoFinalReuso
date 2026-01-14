@@ -13,113 +13,120 @@ import com.sebastian.inventory_management.DTO.Category.CategoryRequestDTO;
 import com.sebastian.inventory_management.DTO.Category.CategoryResponseDTO;
 import com.sebastian.inventory_management.enums.ActionType;
 import com.sebastian.inventory_management.event.Category.CategoryEvent;
-import com.sebastian.inventory_management.exception.ResourceNotFoundException;
+import com.sebastian.inventory_management.event.base.BaseEvent;
 import com.sebastian.inventory_management.mapper.CategoryMapper;
 import com.sebastian.inventory_management.mapper.PageMapperUtil;
 import com.sebastian.inventory_management.model.Category;
 import com.sebastian.inventory_management.repository.CategoryRepository;
 import com.sebastian.inventory_management.service.ICategoryService;
+import com.sebastian.inventory_management.service.base.AbstractCrudService;
 
 @Service
-public class CategoryServiceImpl implements ICategoryService {
-
-    private final CategoryRepository categoryRepository;
-    private final CategoryMapper categoryMapper;
-    private final ApplicationEventPublisher eventPublisher;
+public class CategoryServiceImpl extends AbstractCrudService<
+        Category,
+        CategoryResponseDTO,
+        CategoryRequestDTO,
+        Long,
+        CategoryRepository,
+        CategoryMapper> implements ICategoryService {
 
     @Autowired
     public CategoryServiceImpl(CategoryRepository categoryRepository, CategoryMapper categoryMapper,
             ApplicationEventPublisher eventPublisher) {
-        this.eventPublisher = eventPublisher;
-        this.categoryRepository = categoryRepository;
-        this.categoryMapper = categoryMapper;
+        super(categoryRepository, categoryMapper, eventPublisher);
     }
 
     @Override
-    @Transactional
+    protected String getEntityName() {
+        return "Category";
+    }
+
+    @Override
+    protected CategoryResponseDTO toDTO(Category entity) {
+        return mapper.toDTO(entity);
+    }
+
+    @Override
+    protected List<CategoryResponseDTO> toDTOList(List<Category> entities) {
+        return mapper.toDTOList(entities);
+    }
+
+    @Override
+    protected Category toEntity(CategoryRequestDTO request) {
+        return mapper.toEntity(request);
+    }
+
+    @Override
+    protected void updateEntityFromDto(CategoryRequestDTO request, Category entity) {
+        mapper.updateEntityFromDto(request, entity);
+    }
+
+    @Override
+    protected BaseEvent<?> createEvent(Category entity, ActionType actionType) {
+        return new CategoryEvent(entity, actionType);
+    }
+
+    @Override
+    protected void validateBeforeSave(CategoryRequestDTO request, Long excludeId) {
+        validateUniqueCategoryName(request.getName(), excludeId);
+    }
+
+    @Override
     public CategoryResponseDTO saveCategory(CategoryRequestDTO category) {
-        validateUniqueCategoryName(category.getName(), null);
-        Category categoryToSave = categoryMapper.toEntity(category);
-        Category savedCategory = categoryRepository.save(categoryToSave);
-        eventPublisher.publishEvent(new CategoryEvent(savedCategory, ActionType.CREATED));
-        return categoryMapper.toDTO(savedCategory);
+        return save(category);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public CategoryResponseDTO getCategoryById(Long id) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
-        return categoryMapper.toDTO(category);
+        return getById(id);
+    }
+
+    @Override
+    public List<CategoryResponseDTO> getAllCategories() {
+        return getAll();
+    }
+
+    @Override
+    public Page<CategoryResponseDTO> getAllPageableCategories(Pageable pageable) {
+        return getAllPaginated(pageable);
+    }
+
+    @Override
+    public CategoryResponseDTO updateCategory(Long id, CategoryRequestDTO category) {
+        return update(id, category);
+    }
+
+    @Override
+    public void deleteCategory(Long id) {
+        delete(id);
+    }
+
+    @Override
+    public boolean existsById(Long id) {
+        return repository.existsById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public CategoryResponseDTO getCategoryByName(String name) {
-        Category category = categoryRepository.findByName(name)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with name: " + name));
-        return categoryMapper.toDTO(category);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<CategoryResponseDTO> getAllCategories() {
-        List<Category> categories = categoryRepository.findAll();
-        return categoryMapper.toDTOList(categories);
-    }
-
-    @Override
-    @Transactional
-    public void deleteCategory(Long id) {
-        Category category = getCategoryByIdEntity(id);
-        categoryRepository.delete(category);
-        eventPublisher.publishEvent(new CategoryEvent(category, ActionType.DELETED));
-    }
-
-    @Override
-    @Transactional
-    public CategoryResponseDTO updateCategory(Long id, CategoryRequestDTO category) {
-        Category categoryToUpdate = getCategoryByIdEntity(id);
-        validateUniqueCategoryName(category.getName(), id);
-        categoryMapper.updateEntityFromDto(category, categoryToUpdate);
-        categoryRepository.save(categoryToUpdate);
-        eventPublisher.publishEvent(new CategoryEvent(categoryToUpdate, ActionType.UPDATED));
-        return categoryMapper.toDTO(categoryToUpdate);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean existsById(Long id) {
-        return categoryRepository.existsById(id);
-
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Category getCategoryByIdEntity(Long id) {
-        return categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
-    }
-
-    private void validateUniqueCategoryName(String name, Long excludeId) {
-        categoryRepository.findByName(name).ifPresent(existing -> {
-            if (excludeId == null || !existing.getId().equals(excludeId)) {
-                throw new IllegalArgumentException("Category with name '" + name + "' already exists.");
-            }
-        });
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<CategoryResponseDTO> getAllPageableCategories(Pageable pageable) {
-        Page<Category> categories = categoryRepository.findAll(pageable);
-        return PageMapperUtil.toPage(categories, categoryMapper::toDTO);
+        Category category = repository.findByName(name)
+                .orElseThrow(() -> new com.sebastian.inventory_management.exception.ResourceNotFoundException(
+                        "Category not found with name: " + name));
+        return mapper.toDTO(category);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<CategoryResponseDTO> findByNameContainingIgnoreCase(String name, Pageable pageable) {
-        Page<Category> categories = categoryRepository.findByNameContainingIgnoreCase(name, pageable);
-        return PageMapperUtil.toPage(categories, categoryMapper::toDTO);
+        Page<Category> categories = repository.findByNameContainingIgnoreCase(name, pageable);
+        return PageMapperUtil.toPage(categories, mapper::toDTO);
+    }
+
+    private void validateUniqueCategoryName(String name, Long excludeId) {
+        repository.findByName(name).ifPresent(existing -> {
+            if (excludeId == null || !existing.getId().equals(excludeId)) {
+                throw new IllegalArgumentException("Category with name '" + name + "' already exists.");
+            }
+        });
     }
 }
