@@ -125,10 +125,7 @@ public class CategoryServiceImpl extends
     }
 
     private void validateUniqueCategoryName(String name, Long excludeId) {
-        repository.findByName(name).ifPresent(existing -> {
-            if (excludeId == null || !existing.getId().equals(excludeId)) {
-                throw new IllegalArgumentException("Category with name '" + name + "' already exists.");
-            }
-        });
+        com.sebastian.inventory_management.util.ValidationHelper.validateUniqueName(
+                repository.findByName(name), excludeId, Category::getId, "Category", name);
     }
 }

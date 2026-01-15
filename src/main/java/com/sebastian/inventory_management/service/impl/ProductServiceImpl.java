@@ -26,13 +26,9 @@ import com.sebastian.inventory_management.service.ISupplierService;
 import com.sebastian.inventory_management.service.base.AbstractCrudService;
 
 @Service
-public class ProductServiceImpl extends AbstractCrudService<
-        Product,
-        ProductResponseDTO,
-        ProductRequestDTO,
-        Long,
-        ProductRepository,
-        ProductMapper> implements IProductService {
+public class ProductServiceImpl extends
+        AbstractCrudService<Product, ProductResponseDTO, ProductRequestDTO, Long, ProductRepository, ProductMapper>
+        implements IProductService {
 
     private final ICategoryService categoryService;
     private final ISupplierService supplierService;
@@ -207,10 +203,7 @@ public class ProductServiceImpl extends AbstractCrudService<
     }
 
     private void validateUniqueProductName(String name, Long excludeId) {
-        repository.findByName(name).ifPresent(existing -> {
-            if (excludeId == null || !existing.getId().equals(excludeId)) {
-                throw new IllegalArgumentException("Product with name '" + name + "' already exists.");
-            }
-        });
+        com.sebastian.inventory_management.util.ValidationHelper.validateUniqueName(
+                repository.findByName(name), excludeId, Product::getId, "Product", name);
     }
 }

@@ -2,25 +2,25 @@
 
 ## Sistema: Inventory Management API
 
-**Data:** 2026-01-11  
+**Data:** 2026-01-15 (atualizado)  
 **Objetivo:** Comparar métricas de reusabilidade antes e depois das refatorações aplicadas
 
 ---
 
 ## 1. Resumo Executivo
 
-| Métrica                | 🔴 Antes | 🟢 Depois | Δ Variação             |
-| ---------------------- | -------- | --------- | ---------------------- |
-| **Taxa de Duplicação** | 4.75%    | 0.74%     | ⬇️ **-84.4%**          |
-| **Linhas Duplicadas**  | ~594     | 32        | ⬇️ **-562 linhas**     |
-| **Blocos Duplicados**  | 8        | 6         | ⬇️ **-25%**            |
-| **Violações PMD**      | ~12      | 4         | ⬇️ **-67%**            |
-| **Arquivos Java**      | 105      | 117       | ⬆️ +12 (abstrações)    |
-| **LOC**                | 4.208    | 4.336     | ⬆️ +128 (refatorações) |
-| **CBO (Acoplamento)**  | 7.75     | 7.75      | ➡️ Mantido             |
-| **LCOM (Coesão)**      | 6.83     | 6.83      | ➡️ Mantido             |
-| **WMC (Complexidade)** | 4.46     | 4.46      | ➡️ Mantido             |
-| **RFC (Response)**     | 8.45     | 5.59      | ⬇️ **-34%** ✅         |
+| Métrica                | 🔴 Antes | 🟢 Depois | Δ Variação              |
+| ---------------------- | -------- | --------- | ----------------------- |
+| **Taxa de Duplicação** | 4.75%    | 0.57%     | ⬇️ **-88%**             |
+| **Linhas Duplicadas**  | ~594     | 26        | ⬇️ **-568 linhas**      |
+| **Blocos Duplicados**  | 8        | 5         | ⬇️ **-37.5%**           |
+| **Violações PMD**      | ~12      | 0         | ⬇️ **-100%** ✅         |
+| **Arquivos Java**      | 105      | 117       | ⬆️ +12 (abstrações)     |
+| **LOC**                | 4.208    | 4.547     | ⬆️ +339 (refatorações)  |
+| **CBO (Acoplamento)**  | 7.75     | 7.80      | ➡️ Mantido (~+0.6%)     |
+| **LCOM (Coesão)**      | 6.83     | 13.63     | ⬆️ Aumentou (abstratas) |
+| **WMC (Complexidade)** | 4.46     | 4.70      | ➡️ Mantido (~+5%)       |
+| **RFC (Response)**     | 8.45     | 5.50      | ⬇️ **-35%** ✅          |
 
 ---
 
@@ -31,11 +31,15 @@
 ```
 ANTES                              DEPOIS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Duplicações: ~8 blocos       →     Duplicações: 6 blocos
-Linhas:      ~594 linhas     →     Linhas:      32 linhas
-Taxa:        4.75%           →     Taxa:        0.74%
+Duplicações: ~8 blocos       →     Duplicações: 5 blocos
+Linhas:      ~594 linhas     →     Linhas:      26 linhas
+Taxa:        4.75%           →     Taxa:        0.57%
 Status:      ⚠️ Médio         →     Status:      ✅ Excelente
 ```
+
+> [!NOTE]
+> As 5 duplicações remanescentes são **anotações MapStruct** que não podem ser refatoradas
+> por serem processadas em tempo de compilação. Representam o mínimo irredutível.
 
 ### 2.2 Duplicações Eliminadas
 
@@ -61,22 +65,22 @@ Status:      ⚠️ Médio         →     Status:      ✅ Excelente
 
 #### Controllers REST (Template Method Pattern)
 
-| Arquivo                    | Antes (LOC) | Depois (LOC) | Economia        |
-| -------------------------- | ----------- | ------------ | --------------- |
-| `CategoryController.java`  | ~150        | ~90          | -60 linhas      |
-| `SupplierController.java`  | ~150        | ~90          | -60 linhas      |
-| `ProductController.java`   | ~150        | ~90          | -60 linhas      |
-| `UserController.java`      | ~150        | ~90          | -60 linhas      |
-| **Total**                  | **~600**    | **~360**     | **-240 linhas** |
+| Arquivo                   | Antes (LOC) | Depois (LOC) | Economia        |
+| ------------------------- | ----------- | ------------ | --------------- |
+| `CategoryController.java` | ~150        | ~90          | -60 linhas      |
+| `SupplierController.java` | ~150        | ~90          | -60 linhas      |
+| `ProductController.java`  | ~150        | ~90          | -60 linhas      |
+| `UserController.java`     | ~150        | ~90          | -60 linhas      |
+| **Total**                 | **~600**    | **~360**     | **-240 linhas** |
 
 #### Services CRUD (Template Method Pattern)
 
-| Arquivo                      | Antes (LOC) | Depois (LOC) | Economia        |
-| ---------------------------- | ----------- | ------------ | --------------- |
-| `CategoryServiceImpl.java`   | ~200        | ~135         | -65 linhas      |
-| `SupplierServiceImpl.java`   | ~200        | ~161         | -39 linhas      |
-| `ProductServiceImpl.java`    | ~200        | ~217         | -30 linhas\*    |
-| **Total**                    | **~600**    | **~513**     | **-134 linhas** |
+| Arquivo                    | Antes (LOC) | Depois (LOC) | Economia        |
+| -------------------------- | ----------- | ------------ | --------------- |
+| `CategoryServiceImpl.java` | ~200        | ~135         | -65 linhas      |
+| `SupplierServiceImpl.java` | ~200        | ~161         | -39 linhas      |
+| `ProductServiceImpl.java`  | ~200        | ~217         | -30 linhas\*    |
+| **Total**                  | **~600**    | **~513**     | **-134 linhas** |
 
 > \*ProductServiceImpl tem lógica adicional específica (validações, relacionamentos), por isso a redução é menor
 
@@ -533,30 +537,30 @@ public class CategoryServiceImpl extends AbstractCrudService<
 
 | Métrica                | Antes | Depois | Δ Variação | Status          |
 | ---------------------- | ----- | ------ | ---------- | --------------- |
-| **CBO (Acoplamento)**  | 7.75  | 7.75   | 0%         | ⚠️ Mantido      |
-| **LCOM (Coesão)**      | 6.83  | 6.83   | 0%         | ⚠️ Mantido      |
-| **WMC (Complexidade)** | 4.46  | 4.46   | 0%         | ✅ Adequado     |
-| **RFC (Response)**     | 8.45  | 5.59   | **-34%**   | ✅ **Melhorou** |
-| **DIT (Herança)**      | 1.08  | ~1.5   | +39%       | ✅ Esperado     |
+| **CBO (Acoplamento)**  | 7.75  | 7.80   | +0.6%      | ➡️ Mantido      |
+| **LCOM (Coesão)**      | 6.83  | 13.63  | +100%      | ⚠️ Aumentou     |
+| **WMC (Complexidade)** | 4.46  | 4.70   | +5%        | ✅ Adequado     |
+| **RFC (Response)**     | 8.45  | 5.50   | **-35%**   | ✅ **Melhorou** |
+| **DIT (Herança)**      | 1.08  | 1.22   | +13%       | ✅ Esperado     |
 
-> **Nota:** O DIT aumentou ligeiramente devido às novas classes abstratas, o que é esperado e positivo para reusabilidade.
+> **Nota:** O DIT aumentou devido às novas classes abstratas, o que é esperado e positivo para reusabilidade.
 >
-> **⚠️ Por que CBO e LCOM não mudaram?**
+> **⚠️ Por que LCOM aumentou?**
 >
-> - **CBO:** As refatorações eliminaram duplicação, mas não reduziram dependências entre classes
-> - **LCOM:** A coesão mede se métodos compartilham atributos - não dividimos classes, apenas extraímos código
-> - **RFC melhorou!** Classes agora têm menos métodos que podem ser chamados em resposta a mensagens
+> - **LCOM:** O aumento se deve às novas classes base abstratas (`AbstractCrudService`, `AbstractEventListener`) que possuem múltiplos métodos e atributos - é um efeito colateral esperado de classes Template Method
+> - **CBO:** Manteve-se estável, indicando que não aumentamos o acoplamento
+> - **RFC melhorou significativamente!** Classes agora têm menos métodos que podem ser chamados em resposta a mensagens
 
 ---
 
 ## 5. Métricas de Violações (PMD)
 
-| Tipo de Violação   | Antes   | Depois | Δ           |
-| ------------------ | ------- | ------ | ----------- |
-| Código duplicado   | 8       | 0      | ⬇️ -100%    |
-| Falta de abstração | 3       | 0      | ⬇️ -100%    |
-| UnnecessaryImport  | 1       | 4      | ⬆️ (menor)  |
-| **Total**          | **~12** | **4**  | ⬇️ **-67%** |
+| Tipo de Violação   | Antes   | Depois | Δ               |
+| ------------------ | ------- | ------ | --------------- |
+| Código duplicado   | 8       | 0      | ⬇️ -100%        |
+| Falta de abstração | 3       | 0      | ⬇️ -100%        |
+| UnnecessaryImport  | 1       | 0      | ⬇️ -100%        |
+| **Total**          | **~12** | **0**  | ⬇️ **-100%** ✅ |
 
 ---
 
@@ -592,20 +596,22 @@ public class CategoryServiceImpl extends AbstractCrudService<
 | **`AbstractCrudService`**      | Abstrata   | Base para services      | **Template Method** |
 | **`ResponseBuilder`**          | Utilitário | Padronização respostas  | **Builder**         |
 | **`CrudService`**              | Interface  | Contrato CRUD           | -                   |
+| **`SecurityResponseHelper`**   | Utilitário | Respostas de segurança  | -                   |
+| **`ValidationHelper`**         | Utilitário | Validação de unicidade  | -                   |
 
-**Total:** 14 componentes | **Taxa:** 11.7%
+**Total:** 16 componentes | **Taxa:** 13.7%
 
 ---
 
 ## 7. Padrões de Projeto Aplicados
 
-| Padrão GoF          | Onde Aplicado                                    | Benefício                                 |
-| ------------------- | ------------------------------------------------ | ----------------------------------------- |
+| Padrão GoF          | Onde Aplicado                                                                                     | Benefício                                 |
+| ------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------- |
 | **Template Method** | `AbstractEventListener`, `AbstractExcelExporter`, `AbstractCrudController`, `AbstractCrudService` | Eliminação de duplicação, extensibilidade |
-| **Generics**        | `BaseEvent<T>`, `AbstractCrudService`, `AbstractCrudController`                                    | Tipagem segura, reusabilidade             |
-| **Strategy**        | `PageMapperUtil`                                                                                   | Flexibilidade na conversão                |
-| **Builder**         | `ResponseBuilder`                                                                                  | Construção padronizada de respostas       |
-| **Observer**        | Event Listeners (já existia)                                                                       | Desacoplamento                            |
+| **Generics**        | `BaseEvent<T>`, `AbstractCrudService`, `AbstractCrudController`                                   | Tipagem segura, reusabilidade             |
+| **Strategy**        | `PageMapperUtil`                                                                                  | Flexibilidade na conversão                |
+| **Builder**         | `ResponseBuilder`                                                                                 | Construção padronizada de respostas       |
+| **Observer**        | Event Listeners (já existia)                                                                      | Desacoplamento                            |
 
 ---
 
@@ -613,10 +619,10 @@ public class CategoryServiceImpl extends AbstractCrudService<
 
 ### ✅ Objetivos Alcançados
 
-1. **Redução de 84% na duplicação de código** (4.75% → 0.74%)
-2. **Aumento de 160% nos componentes reutilizáveis** (5 → 14)
-3. **Redução de 67% nas violações PMD** (12 → 4)
-4. **Redução de 34% no RFC** (8.45 → 5.59)
+1. **Redução de 88% na duplicação de código** (4.75% → 0.57%)
+2. **Aumento de 220% nos componentes reutilizáveis** (5 → 16)
+3. **Redução de 100% nas violações PMD** (12 → 0) ✅
+4. **Redução de 35% no RFC** (8.45 → 5.50)
 5. **Aplicação de 5 padrões GoF** (Template Method, Generics, Strategy, Builder, Observer)
 
 ### 📈 Impacto Quantitativo
@@ -631,9 +637,9 @@ public class CategoryServiceImpl extends AbstractCrudService<
 │  Excel Exporters:        ~50 linhas                         │
 │  Event Classes:          ~30 linhas                         │
 ├─────────────────────────────────────────────────────────────┤
-│  TOTAL ECONOMIA:         ~594 linhas de código duplicado    │
+│  TOTAL ECONOMIA:         ~568 linhas de código duplicado    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**Relatório gerado em:** 2026-01-11  
-**Ferramentas:** CK Metrics 0.7.0, PMD, CPD, SonarCloud
+**Relatório atualizado em:** 2026-01-15  
+**Ferramentas:** CK Metrics 0.7.0, PMD 7.17.0, CPD 7.17.0

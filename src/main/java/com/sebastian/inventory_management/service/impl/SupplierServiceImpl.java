@@ -22,13 +22,9 @@ import com.sebastian.inventory_management.service.ISupplierService;
 import com.sebastian.inventory_management.service.base.AbstractCrudService;
 
 @Service
-public class SupplierServiceImpl extends AbstractCrudService<
-        Supplier,
-        SupplierResponseDTO,
-        SupplierRequestDTO,
-        Long,
-        SupplierRepository,
-        SupplierMapper> implements ISupplierService {
+public class SupplierServiceImpl extends
+        AbstractCrudService<Supplier, SupplierResponseDTO, SupplierRequestDTO, Long, SupplierRepository, SupplierMapper>
+        implements ISupplierService {
 
     @Autowired
     public SupplierServiceImpl(SupplierRepository supplierRepository, SupplierMapper supplierMapper,
@@ -144,17 +140,11 @@ public class SupplierServiceImpl extends AbstractCrudService<
     }
 
     private void validateUniqueSupplier(String name, String contactEmail, Long excludeId) {
-        repository.findByName(name).ifPresent(existing -> {
-            if (excludeId == null || !existing.getId().equals(excludeId)) {
-                throw new IllegalArgumentException("Supplier with name '" + name + "' already exists.");
-            }
-        });
+        com.sebastian.inventory_management.util.ValidationHelper.validateUniqueName(
+                repository.findByName(name), excludeId, Supplier::getId, "Supplier", name);
 
-        repository.findByContactEmail(contactEmail).ifPresent(existing -> {
-            if (excludeId == null || !existing.getId().equals(excludeId)) {
-                throw new IllegalArgumentException(
-                        "Supplier with contact email '" + contactEmail + "' already exists.");
-            }
-        });
+        com.sebastian.inventory_management.util.ValidationHelper.validateUniqueField(
+                repository.findByContactEmail(contactEmail), excludeId, Supplier::getId,
+                "Supplier", "contact email", contactEmail);
     }
 }
