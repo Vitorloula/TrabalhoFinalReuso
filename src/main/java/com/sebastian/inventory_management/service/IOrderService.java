@@ -1,17 +1,15 @@
 package com.sebastian.inventory_management.service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
-import com.sebastian.inventory_management.DTO.Order.OrderCountByMonthDTO;
 import com.sebastian.inventory_management.DTO.Order.OrderMonthlyDTO;
 import com.sebastian.inventory_management.DTO.Order.OrderRequestDTO;
 import com.sebastian.inventory_management.DTO.Order.OrderResponseDTO;
 import com.sebastian.inventory_management.model.Order;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
 public interface IOrderService {
     OrderResponseDTO createOrder(OrderRequestDTO orderDTO);
