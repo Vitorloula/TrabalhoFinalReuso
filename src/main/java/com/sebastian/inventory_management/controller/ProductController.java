@@ -1,10 +1,13 @@
 package com.sebastian.inventory_management.controller;
 
-import java.util.List;
-
+import com.sebastian.inventory_management.DTO.Product.ProductRequestDTO;
+import com.sebastian.inventory_management.DTO.Product.ProductResponseDTO;
+import com.sebastian.inventory_management.controller.base.AbstractCrudController;
+import com.sebastian.inventory_management.controller.base.CrudService;
+import com.sebastian.inventory_management.controller.util.ResponseBuilder;
+import com.sebastian.inventory_management.service.IProductService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,12 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.sebastian.inventory_management.controller.base.AbstractCrudController;
-import com.sebastian.inventory_management.controller.base.CrudService;
-import com.sebastian.inventory_management.controller.util.ResponseBuilder;
-import com.sebastian.inventory_management.DTO.Product.ProductRequestDTO;
-import com.sebastian.inventory_management.DTO.Product.ProductResponseDTO;
-import com.sebastian.inventory_management.service.IProductService;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
